@@ -1,0 +1,16 @@
+{
+    "system": {
+        "deployer": "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277",
+        "multisig": "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB",
+        "voteProxy": "",
+        "booster": "",
+        "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B"
+    },
+    "prisma": {
+        "prisma": "",
+        "veprisma": "",
+        "treasury": "",
+        "incentiveVoting": "",
+        "adminVoting": ""
+    }
+}
