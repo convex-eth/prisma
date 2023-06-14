@@ -17,7 +17,7 @@ interface IEmissionReceiver {
     function notifyRegisteredId(uint256[] memory assignedIds) external returns (bool);
 }
 
-interface IRewards {
+interface IPrismaRewards {
     function treasuryClaimReward(address claimant, address receiver) external returns (uint256);
 
     function claimableReward(address account) external view returns (uint256);
@@ -277,7 +277,7 @@ contract PrismaTreasury is PrismaOwnable, SystemStart {
     function batchClaimRewards(
         address receiver,
         address boostDelegate,
-        IRewards[] calldata rewardContracts
+        IPrismaRewards[] calldata rewardContracts
     ) external returns (uint256) {
         uint total = pendingRewardFor[msg.sender];
         uint length = rewardContracts.length;
@@ -379,7 +379,7 @@ contract PrismaTreasury is PrismaOwnable, SystemStart {
     function claimableRewardAfterBoost(
         address account,
         address boostDelegate,
-        IRewards rewardContract
+        IPrismaRewards rewardContract
     ) external view returns (uint256 adjustedAmount, uint256 feeToDelegate) {
         uint amount = rewardContract.claimableReward(account);
         uint week = getWeek();

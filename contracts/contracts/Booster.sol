@@ -157,9 +157,6 @@ contract Booster{
     function claimFees() external {
         require(feeclaimer == address(0) || feeclaimer == msg.sender, "!auth");
         require(feeQueue != address(0),"!fee queue");
-
-        //TODO: refactor later to pull returned value from call
-        uint256 bal = IERC20(prisma).balanceOf(feeQueue);
         
         bytes memory data = abi.encodeWithSelector(bytes4(keccak256("batchClaimRewards(address,address,address[])")), feeQueue, address(0), new address[](0));
         _proxyCall(prismaTreasury,data);
@@ -167,8 +164,6 @@ contract Booster{
         if(feeQueueProcess){
             IFeeReceiver(feeQueue).processFees();
         }
-
-        emit FeesClaimed(IERC20(prisma).balanceOf(feeQueue) - bal);
     }
 
     
@@ -182,6 +177,5 @@ contract Booster{
     event VoteManagerChanged(address indexed _address);
     event Shutdown();
     event DelegateSet(address indexed _address);
-    event FeesClaimed(uint256 _amount);
     event Recovered(address indexed _token, uint256 _amount);
 }
