@@ -64,7 +64,7 @@ contract TokenLocker is SystemStart {
     mapping(address => uint32[65535]) accountWeeklyUnlocks;
 
     // account -> primary account data structure
-    mapping(address => AccountData) accountLockData;
+    mapping(address => AccountData) public accountLockData;
 
     // Multiplier applied during token deposits and withdrawals. A balance within this
     // contract corresponds to a deposit of `balance * lockToTokenRatio` tokens. Balances

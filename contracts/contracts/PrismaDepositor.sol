@@ -85,8 +85,9 @@ contract PrismaDepositor{
             return;
         }
         
-        //increase amount
-        IStaker(staker).lock(tokenBalance);
+        //increase amount after dividing by token ratio
+        //this will leave some dust but will accumulate for next lock
+        IStaker(staker).lock(tokenBalance / ITokenLocker(escrow).lockToTokenRatio());
     }
 
     function lock() external {
@@ -104,6 +105,7 @@ contract PrismaDepositor{
         if(platformHolding > 0){
             //can only withhold if there is surplus locked
             (uint256 lockedAmount,) = ITokenLocker(escrow).getAccountBalances(staker);
+            lockedAmount *= ITokenLocker(escrow).lockToTokenRatio();
             if(_amount + IERC20(minter).totalSupply() <= lockedAmount ){
                 uint256 holdAmt = _amount * platformHolding / DENOMINATOR;
                 IERC20(prisma).safeTransferFrom(msg.sender, platformDeposit, holdAmt);

@@ -24,7 +24,7 @@ contract Booster{
     address public immutable prismaTreasury;
     address public immutable prismaVoting;
     address public immutable prismaIncentives;
-    address public immutable cvxfpis;
+    address public immutable cvxprisma;
     address public owner;
     address public pendingOwner;
 
@@ -36,11 +36,11 @@ contract Booster{
     bool public feeQueueProcess;
 
 
-    constructor(address _proxy, address _depositor, address _ptreasury, address _pVoting, address _pIncentives, address _prisma, address _cvxfpis) {
+    constructor(address _proxy, address _depositor, address _ptreasury, address _pVoting, address _pIncentives, address _prisma, address _cvxprisma) {
         proxy = _proxy;
         prismaDepositor = _depositor;
         prisma = _prisma;
-        cvxfpis = _cvxfpis;
+        cvxprisma = _cvxprisma;
         prismaTreasury = _ptreasury;
         prismaVoting = _pVoting;
         prismaIncentives = _pIncentives;

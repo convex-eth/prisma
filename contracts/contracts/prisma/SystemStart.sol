@@ -8,7 +8,8 @@ contract SystemStart {
     uint256 immutable startTime;
 
     constructor(address addressProvider) {
-        startTime = IAddressProvider(addressProvider).startTime();
+        // startTime = IAddressProvider(addressProvider).startTime();
+        startTime = block.timestamp;
     }
 
     function getWeek() public view returns (uint256) {

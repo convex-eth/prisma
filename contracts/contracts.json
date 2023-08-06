@@ -2,13 +2,15 @@
     "system": {
         "deployer": "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277",
         "multisig": "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB",
+        "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
+        "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
+        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
         "voteProxy": "",
-        "booster": "",
-        "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B"
+        "booster": ""
     },
     "prisma": {
         "prisma": "",
-        "veprisma": "",
+        "prismaLocker": "",
         "treasury": "",
         "incentiveVoting": "",
         "adminVoting": ""
