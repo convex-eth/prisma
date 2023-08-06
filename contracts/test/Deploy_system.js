@@ -222,8 +222,8 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("cvx emissions set");
 
     console.log("\n-- initial lock --\n");
-    // await prisma.transfer(voteproxy.address, web3.utils.toWei("100.0", "ether"),{from:userA});
-    await prisma.transfer(voteproxy.address, "100" ,{from:userA});
+    await prisma.transfer(voteproxy.address, web3.utils.toWei("100.0", "ether"),{from:userA});
+    // await prisma.transfer(voteproxy.address, "100" ,{from:userA});
     console.log("transfered")
     await depositor.initialLock({from:deployer});
     console.log("initialLock");
@@ -234,8 +234,8 @@ contract("prisma deploy and lock testing", async accounts => {
     await cvxPrisma.balanceOf(userA).then(a=>console.log("cvxprisma balance: " +a))
     await prisma.approve(depositor.address,web3.utils.toWei("1000000000000.0", "ether"),{from:userA});
     console.log("approved to depositor")
-    // await depositor.deposit(web3.utils.toWei("1000.0", "ether"),true,{from:userA});
-    await depositor.deposit("1000",true,{from:userA});
+    await depositor.deposit(web3.utils.toWei("1000.0", "ether"),true,{from:userA});
+    // await depositor.deposit("1000",true,{from:userA});
     console.log("deposited")
     await prisma.balanceOf(userA).then(a=>console.log("prisma balance: " +a))
     await cvxPrisma.balanceOf(userA).then(a=>console.log("cvxprisma balance: " +a))
