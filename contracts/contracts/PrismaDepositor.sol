@@ -68,7 +68,7 @@ contract PrismaDepositor{
         require(msg.sender==owner, "!auth");
 
         uint256 tokenBalanceStaker = IERC20(prisma).balanceOf(staker);
-        IStaker(staker).lock(tokenBalanceStaker);
+        IStaker(staker).lock(tokenBalanceStaker / ITokenLocker(escrow).lockToTokenRatio());
         IStaker(staker).freeze();
     }
 

@@ -170,35 +170,35 @@ contract("prisma deploy and lock testing", async accounts => {
 
 
     console.log("\n-- deploy convex --\n");
-    let voteproxy = await PrismaVoterProxy.new(prisma.address, prismaLocker.address,{from:deployer});
+    let voteproxy = await PrismaVoterProxy.new(prisma.address, prismaLocker.address,{from:deployer,gasPrice:0});
     contractList.system.voteProxy = voteproxy.address;
     console.log("voteproxy: " +voteproxy.address);
 
-    let cvxPrisma = await cvxPrismaToken.new({from:deployer});
+    let cvxPrisma = await cvxPrismaToken.new({from:deployer,gasPrice:0});
     contractList.system.cvxPrisma = cvxPrisma.address;
     console.log("cvxPrisma: " +cvxPrisma.address);
 
-    let depositor = await PrismaDepositor.new(voteproxy.address, cvxPrisma.address, prisma.address, prismaLocker.address, {from:deployer});
+    let depositor = await PrismaDepositor.new(voteproxy.address, cvxPrisma.address, prisma.address, prismaLocker.address, {from:deployer,gasPrice:0});
     contractList.system.depositor = depositor.address;
     console.log("depositor: " +depositor.address);
 
-    let burner = await Burner.new(cvxPrisma.address, {from:deployer});
+    let burner = await Burner.new(cvxPrisma.address, {from:deployer,gasPrice:0});
     contractList.system.burner = burner.address;
     console.log("burner: " +burner.address);
 
-    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer});
+    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer,gasPrice:0});
     contractList.system.booster = booster.address;
     console.log("booster: " +booster.address);
 
-    let staking = await cvxPrismaStaking.new(voteproxy.address, prisma.address, cvxPrisma.address, depositor.address, {from:deployer});
+    let staking = await cvxPrismaStaking.new(voteproxy.address, prisma.address, cvxPrisma.address, depositor.address, {from:deployer,gasPrice:0});
     contractList.system.cvxPrismaStaking = staking.address;
     console.log("cvxPrismaStaking: " +staking.address);
 
-    let stakingFeeReceiver = await FeeReceiverCvxPrisma.new(prisma.address, staking.address, {from:deployer});
+    let stakingFeeReceiver = await FeeReceiverCvxPrisma.new(prisma.address, staking.address, {from:deployer,gasPrice:0});
     contractList.system.stakingFeeReceiver = stakingFeeReceiver.address;
     console.log("stakingFeeReceiver: " +stakingFeeReceiver.address);
 
-    let feeQueue = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer});
+    let feeQueue = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer,gasPrice:0});
     contractList.system.feeQueue = feeQueue.address;
     console.log("feeQueue: " +feeQueue.address);
     
