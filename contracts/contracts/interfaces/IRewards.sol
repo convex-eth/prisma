@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 interface IRewards{
+
     struct EarnedData {
         address token;
         uint256 amount;
@@ -22,5 +23,7 @@ interface IRewards{
     function claimableRewards(address _account) external view returns(EarnedData[] memory userRewards);
     function rewardTokens(uint256 _rid) external view returns (address);
     function rewardTokenLength() external view returns(uint256);
+    function rewardData(address _token) external view returns(uint256 periodFinish, uint256 rewardRate, uint256 lastUpdate, uint256 rewardPerTokenStored);
+    function totalSupply() external view returns(uint256);
     function active() external view returns(bool);
 }

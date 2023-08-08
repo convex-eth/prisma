@@ -7,7 +7,8 @@ import "../interfaces/IAddressProvider.sol";
 contract SystemStart {
     uint256 immutable startTime;
 
-    constructor(address addressProvider) {
+    // constructor(address addressProvider) {
+    constructor(address) {
         // startTime = IAddressProvider(addressProvider).startTime();
         startTime = block.timestamp;
     }

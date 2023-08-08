@@ -18,6 +18,7 @@ const FeeReceiverCvxPrisma = artifacts.require("FeeReceiverCvxPrisma");
 const FeeDepositV2 = artifacts.require("FeeDepositV2");
 const cvxPrismaStaking = artifacts.require("cvxPrismaStaking");
 const cvxPrismaToken = artifacts.require("cvxPrismaToken");
+const Utilities = artifacts.require("Utilities");
 const Burner = artifacts.require("Burner");
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -201,6 +202,10 @@ contract("prisma deploy and lock testing", async accounts => {
     let feeQueue = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer,gasPrice:0});
     contractList.system.feeQueue = feeQueue.address;
     console.log("feeQueue: " +feeQueue.address);
+
+    let utility = await Utilities.new(voteproxy.address, prismaLocker.address, staking.address, {from:deployer,gasPrice:0});
+    contractList.system.utility = utility.address;
+    console.log("utility: " +utility.address);
     
     jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
 
@@ -228,7 +233,8 @@ contract("prisma deploy and lock testing", async accounts => {
     await depositor.initialLock({from:deployer});
     console.log("initialLock");
     await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
-    await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +JSON.stringify(a)))
+    await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
+    await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
 
     await prisma.balanceOf(userA).then(a=>console.log("prisma balance: " +a))
     await cvxPrisma.balanceOf(userA).then(a=>console.log("cvxprisma balance: " +a))
@@ -240,9 +246,24 @@ contract("prisma deploy and lock testing", async accounts => {
     await prisma.balanceOf(userA).then(a=>console.log("prisma balance: " +a))
     await cvxPrisma.balanceOf(userA).then(a=>console.log("cvxprisma balance: " +a))
     await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
-    await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +JSON.stringify(a)))
+    await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
+    await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
 
     
+    console.log("\n-- start rewards ---");
+
+    await advanceTime(day*5);
+    await prisma.transfer(stakingFeeReceiver.address, web3.utils.toWei("100.0", "ether"),{from:userA});
+    await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
+    await cvx.balanceOf(staking.address).then(a=>console.log("cvx balance of staking: " +a));
+    await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
+
+    await stakingFeeReceiver.processFees();
+    console.log("processFees()");
+
+    await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
+    await cvx.balanceOf(staking.address).then(a=>console.log("cvx balance of staking: " +a));
+    await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
   });
 });
 
