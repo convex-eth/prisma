@@ -187,7 +187,7 @@ contract("prisma deploy and lock testing", async accounts => {
     contractList.system.burner = burner.address;
     console.log("burner: " +burner.address);
 
-    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer,gasPrice:0});
+    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, {from:deployer,gasPrice:0});
     contractList.system.booster = booster.address;
     console.log("booster: " +booster.address);
 
