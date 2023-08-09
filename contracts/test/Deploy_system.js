@@ -253,7 +253,7 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("\n-- start rewards ---");
 
     await advanceTime(day*5);
-    await prisma.transfer(stakingFeeReceiver.address, web3.utils.toWei("100.0", "ether"),{from:userA});
+    await prisma.transfer(stakingFeeReceiver.address, web3.utils.toWei("1000.0", "ether"),{from:userA});
     await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
     await cvx.balanceOf(staking.address).then(a=>console.log("cvx balance of staking: " +a));
     await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
@@ -264,6 +264,28 @@ contract("prisma deploy and lock testing", async accounts => {
     await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
     await cvx.balanceOf(staking.address).then(a=>console.log("cvx balance of staking: " +a));
     await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
+
+    // console.log("\n-- stake ---");
+    // await prisma.approve(staking.address,web3.utils.toWei("1000000000000.0", "ether"),{from:userA});
+    // await cvxPrisma.approve(staking.address,web3.utils.toWei("1000000000000.0", "ether"),{from:userA});
+    // await staking.deposit(web3.utils.toWei("1000.0", "ether"),true,{from:userA});
+    // console.log("user A deposit staking")
+    // await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
+    // await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
+    // await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
+    // await staking.stake(web3.utils.toWei("1000.0", "ether"),{from:userA});
+    // console.log("user B stake stating")
+    // await staking.balanceOf(userA).then(a=>console.log("staking balance: " +a));
+    // await staking.claimableRewards(userA).then(a=>console.log("claimable rewards: " +JSON.stringify(a)));
+    // await advanceTime(day*5);
+    // await staking.claimableRewards(userA).then(a=>console.log("claimable rewards: " +JSON.stringify(a)));
+    // await prisma.balanceOf(userA).then(a=>console.log("prisma balance of user: " +a))
+    // await cvx.balanceOf(userA).then(a=>console.log("cvx balance of user: " +a))
+    // await staking.getReward(userA);
+    // console.log("getReward()")
+    // await staking.claimableRewards(userA).then(a=>console.log("claimable rewards: " +JSON.stringify(a)));
+    // await prisma.balanceOf(userA).then(a=>console.log("prisma balance of user: " +a))
+    // await cvx.balanceOf(userA).then(a=>console.log("cvx balance of user: " +a))
   });
 });
 
