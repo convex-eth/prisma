@@ -3,4 +3,5 @@ pragma solidity 0.8.19;
 
 interface IFeeReceiver {
    function processFees() external;
+   function onProcessFees(address _caller) external;
 }

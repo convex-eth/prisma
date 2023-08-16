@@ -20,8 +20,9 @@ contract Booster{
     address public immutable proxy;
 
     address public immutable prisma;
+    address public immutable cvxPrisma;
     address public immutable prismaDepositor;
-    address public immutable prismaTreasury;
+    address public immutable prismaVault;
     address public immutable prismaVoting;
     address public immutable prismaIncentives;
     address public owner;
@@ -35,14 +36,14 @@ contract Booster{
     bool public feeQueueProcess;
 
 
-    constructor(address _proxy, address _depositor, address _ptreasury, address _pVoting, address _pIncentives, address _prisma) {
+    constructor(address _proxy, address _depositor, address _pvault, address _pVoting, address _pIncentives, address _prisma, address _cvxPrisma) {
         proxy = _proxy;
         prismaDepositor = _depositor;
         prisma = _prisma;
-        prismaTreasury = _ptreasury;
+        prismaVault = _pvault;
         prismaVoting = _pVoting;
         prismaIncentives = _pIncentives;
-        isShutdown = false;
+        cvxPrisma = _cvxPrisma;
         owner = msg.sender;
         rewardManager = msg.sender;
      }
@@ -119,10 +120,19 @@ contract Booster{
         emit Shutdown();
     }
 
+    function setBoosterFees(bool _isEnabled, uint _feePct, address _callback) external onlyOwner{
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setBoostDelegationParams(bool,uint,address)")), _isEnabled, _feePct, _callback);
+        _proxyCall(prismaVault,data);
+    }
 
-    function setBoosterFees(bool isEnabled, uint feePct, address callback) external onlyOwner{
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setBoostDelegationParams(bool,uint,address)")), isEnabled, feePct, callback);
-        _proxyCall(prismaTreasury,data);
+    function setAirdropMinter(address _airdrop, address _minter) external onlyOwner{
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setClaimCallback(address)")), _minter);
+        _proxyCall(_airdrop,data);
+    }
+
+    function setTokenMinter(address _operator, bool _valid) external onlyOwner{
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setOperators(address,bool)")), _operator, _valid);
+        _proxyCall(cvxPrisma,data);
     }
 
     //recover tokens on this contract
@@ -149,7 +159,7 @@ contract Booster{
         require(feeQueue != address(0),"!fee queue");
 
         bytes memory data = abi.encodeWithSelector(bytes4(keccak256("batchClaimRewards(address,address,address[])")), feeQueue, address(0), new address[](0));
-        _proxyCall(prismaTreasury,data);
+        _proxyCall(prismaVault,data);
 
         if(feeQueueProcess){
             IFeeReceiver(feeQueue).processFees();

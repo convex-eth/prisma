@@ -12,7 +12,7 @@ contract EmissionSchedule is PrismaOwnable, SystemStart {
     event LockParametersSet(uint256 lockWeeks, uint256 lockDecayWeeks);
 
     IIncentiveVoting public immutable voter;
-    IPrismaTreasury public immutable treasury;
+    IPrismaVault public immutable treasury;
 
     // current number of weeks that emissions are locked for when they are claimed
     uint64 public lockWeeks;
@@ -33,7 +33,7 @@ contract EmissionSchedule is PrismaOwnable, SystemStart {
     constructor(
         address _addressProvider,
         IIncentiveVoting _voter,
-        IPrismaTreasury _treasury,
+        IPrismaVault _treasury,
         uint64 _initialLockWeeks,
         uint64 _lockDecayWeeks,
         uint64 _weeklyPct,

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.19;
 
-interface IPrismaTreasury {
+interface IPrismaVault {
     function unallocatedTotal() external view returns (uint256);
 
     function allocateNewEmissions(uint id) external returns (uint256);

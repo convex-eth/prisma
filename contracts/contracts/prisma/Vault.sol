@@ -23,7 +23,7 @@ interface IPrismaRewards {
     function claimableReward(address account) external view returns (uint256);
 }
 
-contract PrismaTreasury is PrismaOwnable, SystemStart {
+contract PrismaVault is PrismaOwnable, SystemStart {
     using Address for address;
     using SafeERC20 for IERC20;
 

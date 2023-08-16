@@ -46,4 +46,8 @@ contract FeeReceiverCvxPrisma is IFeeReceiver {
         }
     }
 
+    function onProcessFees(address _caller) external{
+        
+    }
+
 }

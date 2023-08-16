@@ -5,10 +5,11 @@ var contractList = jsonfile.readFileSync('./contracts.json');
 
 const PrismaToken = artifacts.require("PrismaToken");
 const TokenLocker = artifacts.require("TokenLocker");
-const PrismaTreasury = artifacts.require("PrismaTreasury");
+const PrismaVault = artifacts.require("PrismaVault");
 const SystemStart = artifacts.require("SystemStart");
 const IncentiveVoting = artifacts.require("IncentiveVoting");
 const AdminVoting = artifacts.require("AdminVoting");
+const AirdropDistributor = artifacts.require("AirdropDistributor");
 
 
 
@@ -20,6 +21,9 @@ const cvxPrismaStaking = artifacts.require("cvxPrismaStaking");
 const cvxPrismaToken = artifacts.require("cvxPrismaToken");
 const Utilities = artifacts.require("Utilities");
 const Burner = artifacts.require("Burner");
+const DropMinter = artifacts.require("DropMinter");
+const ProxyVault = artifacts.require("ProxyVault");
+
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
 
@@ -163,47 +167,61 @@ contract("prisma deploy and lock testing", async accounts => {
     await prisma.setLocker(prismaLocker.address,{from:deployer});
     console.log("locker set on prisma token")
 
-    // let treasury = await PrismaTreasury.new(addresProvider, prisma.address, prismaLocker.address, addressZero, addressZero, addressZero, addressZero, 20, [],[], {from:deployer,gasPrice:0})
-    // contractList.prisma.treasury = treasury.address;
-    // console.log("treasury: " +treasury.address);
+    let airdrop = await AirdropDistributor.new(prisma.address, prismaLocker.address, addressZero,{from:deployer,gasPrice:0} );
+    contractList.prisma.airdrop = airdrop.address;
+    console.log("airdrop: " +airdrop.address);
+    await prisma.mint(airdrop.address, web3.utils.toWei("1000000.0", "ether"),{from:deployer});
+    await prisma.balanceOf(airdrop.address).then(a=>console.log("balance on airdrop: " +a))
 
-    //let incentiveVote = await IncentiveVoting.new(addresProvider, addressZero, treasury.address, {from:deployer});
+    // let vault = await PrismaVault.new(addresProvider, prisma.address, prismaLocker.address, addressZero, addressZero, addressZero, addressZero, 20, [],[], {from:deployer,gasPrice:0})
+    // contractList.prisma.vault = vault.address;
+    // console.log("vault: " +vault.address);
+
+    //let incentiveVote = await IncentiveVoting.new(addresProvider, addressZero, vault.address, {from:deployer});
 
 
     console.log("\n-- deploy convex --\n");
-    let voteproxy = await PrismaVoterProxy.new(prisma.address, prismaLocker.address,{from:deployer,gasPrice:0});
+    let voteproxy = await PrismaVoterProxy.new(prisma.address, prismaLocker.address,{from:deployer});
     contractList.system.voteProxy = voteproxy.address;
     console.log("voteproxy: " +voteproxy.address);
 
-    let cvxPrisma = await cvxPrismaToken.new({from:deployer,gasPrice:0});
+    let cvxPrisma = await cvxPrismaToken.new(voteproxy.address, {from:deployer});
     contractList.system.cvxPrisma = cvxPrisma.address;
     console.log("cvxPrisma: " +cvxPrisma.address);
 
-    let depositor = await PrismaDepositor.new(voteproxy.address, cvxPrisma.address, prisma.address, prismaLocker.address, {from:deployer,gasPrice:0});
+    let depositor = await PrismaDepositor.new(voteproxy.address, cvxPrisma.address, prisma.address, prismaLocker.address, {from:deployer});
     contractList.system.depositor = depositor.address;
     console.log("depositor: " +depositor.address);
 
-    let burner = await Burner.new(cvxPrisma.address, {from:deployer,gasPrice:0});
+    let burner = await Burner.new(cvxPrisma.address, {from:deployer});
     contractList.system.burner = burner.address;
     console.log("burner: " +burner.address);
 
-    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, {from:deployer,gasPrice:0});
+    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer});
     contractList.system.booster = booster.address;
     console.log("booster: " +booster.address);
 
-    let staking = await cvxPrismaStaking.new(voteproxy.address, prisma.address, cvxPrisma.address, depositor.address, {from:deployer,gasPrice:0});
+    let staking = await cvxPrismaStaking.new(voteproxy.address, prisma.address, cvxPrisma.address, depositor.address, {from:deployer});
     contractList.system.cvxPrismaStaking = staking.address;
     console.log("cvxPrismaStaking: " +staking.address);
 
-    let stakingFeeReceiver = await FeeReceiverCvxPrisma.new(prisma.address, staking.address, {from:deployer,gasPrice:0});
+    let stakingFeeReceiver = await FeeReceiverCvxPrisma.new(prisma.address, staking.address, {from:deployer});
     contractList.system.stakingFeeReceiver = stakingFeeReceiver.address;
     console.log("stakingFeeReceiver: " +stakingFeeReceiver.address);
 
-    let feeQueue = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer,gasPrice:0});
+    let feeQueue = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer});
     contractList.system.feeQueue = feeQueue.address;
     console.log("feeQueue: " +feeQueue.address);
 
-    let utility = await Utilities.new(voteproxy.address, prismaLocker.address, staking.address, {from:deployer,gasPrice:0});
+    let receiverVault = await ProxyVault.new(voteproxy.address, addressZero, {from:deployer});
+    contractList.system.receiverVault = receiverVault.address;
+    console.log("receiverVault: " +receiverVault.address);
+
+    let dropMinter = await DropMinter.new(cvxPrisma.address, airdrop.address, prismaLocker.address, {from:deployer});
+    contractList.system.dropMinter = dropMinter.address;
+    console.log("dropMinter: " +dropMinter.address);
+
+    let utility = await Utilities.new(voteproxy.address, prismaLocker.address, staking.address, {from:deployer});
     contractList.system.utility = utility.address;
     console.log("utility: " +utility.address);
     
@@ -213,10 +231,17 @@ contract("prisma deploy and lock testing", async accounts => {
 
     await voteproxy.setDepositor(depositor.address,{from:deployer});
     await voteproxy.setOperator(booster.address,{from:deployer});
-    await cvxPrisma.setOperators(depositor.address, burner.address, {from:deployer});
+    await booster.setTokenMinter(depositor.address, true, {from:deployer});
+    await booster.setTokenMinter(burner.address, true, {from:deployer});
+    await booster.setTokenMinter(dropMinter.address, true, {from:deployer});
+    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
+    await unlockAccount(voteproxy.address)
+    await cvxPrisma.revokeOwnership({from:voteproxy.address,gasPrice:0});
+    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
+    await booster.setTokenMinter(deployer, true, {from:deployer}).catch(a=>console.log("revert set operators: " +a));
     console.log("set operators")
 
-    await booster.setFeeQueue(feeQueue.address, true, {from:deployer});
+    await booster.setFeeQueue(receiverVault.address, true, {from:deployer});
     await staking.addReward(prisma.address, stakingFeeReceiver.address, {from:deployer});
     await staking.addReward(cvx.address, stakingFeeReceiver.address, {from:deployer});
     console.log("staking params set")
@@ -225,6 +250,9 @@ contract("prisma deploy and lock testing", async accounts => {
     await cvxdistro.setWeight(stakingFeeReceiver.address, 100, {from:deployer});
     await cvxdistro.setWeight(contractList.system.treasury, 6650, {from:deployer});
     console.log("cvx emissions set");
+
+    await booster.setAirdropMinter(airdrop.address, dropMinter.address, {from:deployer});
+    console.log("airdrop minter set")
 
     console.log("\n-- initial lock --\n");
     await prisma.transfer(voteproxy.address, web3.utils.toWei("100.0", "ether"),{from:userA});
@@ -286,6 +314,22 @@ contract("prisma deploy and lock testing", async accounts => {
     // await staking.claimableRewards(userA).then(a=>console.log("claimable rewards: " +JSON.stringify(a)));
     // await prisma.balanceOf(userA).then(a=>console.log("prisma balance of user: " +a))
     // await cvx.balanceOf(userA).then(a=>console.log("cvx balance of user: " +a))
+
+
+    console.log("\n-- airdrop ---");
+    await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
+    await prismaLocker.getAccountBalances(userB).then(a=>console.log("getAccountBalances userB: " +a.locked))
+    await cvxPrisma.balanceOf(userB).then(a=>console.log("cvxPrisma balance of userB: " +a));
+    await airdrop.claim(userB, userB, 1, 500, [], {from:userB} );
+    console.log("claim airdrop to self")
+    await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
+    await prismaLocker.getAccountBalances(userB).then(a=>console.log("getAccountBalances userB: " +a.locked))
+    await cvxPrisma.balanceOf(userB).then(a=>console.log("cvxPrisma balance of userB: " +a));
+    await airdrop.claim(userB, voteproxy.address, 1, 500, [], {from:userB} );
+    console.log("claim airdrop to convex")
+    await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
+    await prismaLocker.getAccountBalances(userB).then(a=>console.log("getAccountBalances userB: " +a.locked))
+    await cvxPrisma.balanceOf(userB).then(a=>console.log("cvxPrisma balance of userB: " +a));
   });
 });
 

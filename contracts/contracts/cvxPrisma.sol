@@ -8,23 +8,28 @@ contract cvxPrismaToken is ERC20 {
 
     address public owner;
     mapping(address => bool) public operators;
+    event SetOperator(address indexed _op, bool _valid);
 
-    constructor()
+    constructor(address _owner)
         ERC20(
             "Convex Prisma",
             "Prisma"
         )
     {
-        owner = msg.sender;
+        owner = _owner;
     }
 
-   function setOperators(address _depositor, address _burner) external {
+    function setOperators(address _operator, bool _valid) external {
         require(msg.sender == owner, "!auth");
-        operators[_depositor] = true;
-        operators[_burner] = true;
-        owner = address(0); //immutable once set
+        operators[_operator] = _valid;
+        emit SetOperator(_operator, _valid);
     }
 
+    //remove ownership
+    function revokeOwnership() external{
+        require(msg.sender == owner, "!auth");
+        owner = address(0);
+    }
     
     function mint(address _to, uint256 _amount) external {
         require(operators[msg.sender], "!authorized");
