@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 
 import "./interfaces/IStaker.sol";
 import "./interfaces/IFeeReceiver.sol";
+import "./interfaces/IPrismaVault.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
@@ -158,11 +159,16 @@ contract Booster{
         require(feeclaimer == address(0) || feeclaimer == msg.sender, "!auth");
         require(feeQueue != address(0),"!fee queue");
 
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("batchClaimRewards(address,address,address[])")), feeQueue, address(0), new address[](0));
-        _proxyCall(prismaVault,data);
+        //check if queued rewards, then claim
+        if(IPrismaVault(prismaVault).claimableBoostDelegationFees(proxy) > 0){
+            //claim
+            bytes memory data = abi.encodeWithSelector(bytes4(keccak256("claimBoostDelegationFees(address)")), feeQueue);
+            _proxyCall(prismaVault,data);
 
-        if(feeQueueProcess){
-            IFeeReceiver(feeQueue).processFees();
+            //process hook if needed
+            if(feeQueueProcess){
+                IFeeReceiver(feeQueue).processFees();
+            }
         }
     }
 
