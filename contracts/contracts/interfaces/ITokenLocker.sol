@@ -9,6 +9,8 @@ interface ITokenLocker {
     }
 
     function lock(address _account, uint256 _amount, uint256 _weeks) external returns (bool);
+    function withdrawExpiredLocks(uint256 _weeks) external returns (bool);
+    function withdrawWithPenalty(uint amountToWithdraw) external returns (uint);
 
     function getAccountBalances(address account) external view returns (uint256 locked, uint256 unlocked);
     function getAccountActiveLocks(
@@ -19,6 +21,8 @@ interface ITokenLocker {
     function getAccountWeightAt(address account, uint week) external view returns (uint256);
 
     function getTotalWeightAt(uint week) external view returns (uint256);
+
+    function getWithdrawWithPenaltyAmounts(address account, uint amountToWithdraw) external view returns (uint amountWithdrawn, uint penaltyAmountPaid);
 
     function lockToTokenRatio() external view returns (uint256);
 

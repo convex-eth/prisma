@@ -101,10 +101,12 @@ contract Booster{
     }
 
     //set fee queue, a contract fees are moved to when claiming
-    function setFeeQueue(address _queue, bool _process) external onlyOwner{
+    function setFeeQueue(address _queue, bool _process, address _operator) external onlyOwner{
         feeQueue = _queue;
         feeQueueProcess = _process;
-        emit FeeQueueChanged(_queue, _process);
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setOperator(address)")), _operator);
+        _proxyCall(feeQueue,data);
+        emit FeeQueueChanged(_queue, _process, _operator);
     }
 
     //set who can call claim fees, 0x0 address will allow anyone to call
@@ -154,7 +156,7 @@ contract Booster{
     //////// End Owner Section ///////////
 
 
-    //claim fees - if set, move to a fee queue that rewards can pull from
+    //claim fees - claim boost fees and allocate to a feeQueue for later processing
     function claimFees() external {
         require(feeclaimer == address(0) || feeclaimer == msg.sender, "!auth");
         require(feeQueue != address(0),"!fee queue");
@@ -176,7 +178,7 @@ contract Booster{
     /* ========== EVENTS ========== */
     event SetPendingOwner(address indexed _address);
     event OwnerChanged(address indexed _address);
-    event FeeQueueChanged(address indexed _address, bool _useProcess);
+    event FeeQueueChanged(address indexed _address, bool _useProcess, address _operator);
     event FeeClaimerChanged(address indexed _address);
     event FeeClaimPairSet(address indexed _address, address indexed _token, bool _value);
     event RewardManagerChanged(address indexed _address);

@@ -4,19 +4,27 @@ pragma solidity 0.8.19;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import "./interfaces/IFeeReceiver.sol";
+import "./interfaces/ITokenLocker.sol";
 
 //vault that may hold funds/fees/locks etc but is controlled by an outside operator
-contract ProxyVault is IFeeReceiver{
+contract ProxyVault {
     using SafeERC20 for IERC20;
 
     address public immutable owner;
+    address public immutable locker;
     address public operator;
     event WithdrawTo(address indexed user, uint256 amount);
     event SetOperator(address _operator);
 
-    constructor(address _owner, address _operator) {
+    constructor(address _locker, address _owner, address _operator) {
+        locker = _locker;
         owner = _owner;
         operator = _operator;
+    }
+
+    modifier onlyOperator() {
+        require(msg.sender == operator, "!op");
+        _;
     }
 
     function setOperator(address _op) external {
@@ -25,30 +33,26 @@ contract ProxyVault is IFeeReceiver{
         emit SetOperator(operator);
     }
     
-    function withdrawTo(IERC20 _asset, uint256 _amount, address _to) external {
-    	require(msg.sender == operator, "!auth");
-
+    function withdrawTo(IERC20 _asset, uint256 _amount, address _to) external onlyOperator{
         _asset.safeTransfer(_to, _amount);
         emit WithdrawTo(_to, _amount);
     }
 
-    function processFees() external {
-        if(operator != address(0)){
-            IFeeReceiver(operator).onProcessFees(msg.sender);
-        }
+    function withdrawLocked(uint256 _amount) external onlyOperator{
+        //pay penalty and withdraw now
+        ITokenLocker(locker).withdrawWithPenalty(_amount);
     }
 
-    function onProcessFees(address _caller) external{
-        
+    function withdrawExpired() external onlyOperator{
+        //withdraw all expired locks
+        ITokenLocker(locker).withdrawExpiredLocks(0);
     }
 
     function execute(
         address _to,
         uint256 _value,
         bytes calldata _data
-    ) external returns (bool, bytes memory) {
-        require(msg.sender == operator,"!auth");
-
+    ) external onlyOperator returns (bool, bytes memory) {
         (bool success, bytes memory result) = _to.call{value:_value}(_data);
 
         return (success, result);

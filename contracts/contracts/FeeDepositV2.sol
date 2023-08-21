@@ -21,11 +21,12 @@ contract FeeDepositV2 {
     
     uint256 public constant denominator = 10000;
     uint256 public callIncentive = 100;
-    uint256 public platformIncentive = 1000;
+    uint256 public platformIncentive = 5000;
     uint256 public vlcvxIncentive = 0;
     address public platformReceiver;
     address public vlcvxReceiver;
     address public cvxPrismaReceiver;
+    address public feeClaimer;
 
     mapping(address => bool) public distributors;
     mapping(address => bool) public requireProcessing;
@@ -37,6 +38,7 @@ contract FeeDepositV2 {
     event SetPlatformReceiver(address _account);
     event SetvlCvxReceiver(address _account);
     event SetCvxPrismaReceiver(address _account);
+    event SetFeeClaimer(address _claimer);
     event AddDistributor(address indexed _distro, bool _valid);
     event PlatformFeesDistributed(address indexed token, uint256 amount);
     event VlcvxFeesDistributed(address indexed token, uint256 amount);
@@ -72,13 +74,13 @@ contract FeeDepositV2 {
     }
 
     function setPlatformIncentive(uint256 _incentive) external onlyOwner{
-        require(_incentive <= 3000, "too high");
+        require(_incentive <= 5000, "too high");
         platformIncentive = _incentive;
         emit SetPlatformIncentive(_incentive);
     }
 
     function setvlCvxIncentive(uint256 _incentive) external onlyOwner{
-        require(_incentive <= 3000, "too high");
+        require(_incentive <= 5000, "too high");
         vlcvxIncentive = _incentive;
         emit SetvlCvxIncentive(_incentive);
     }
@@ -105,6 +107,11 @@ contract FeeDepositV2 {
         emit SetCvxPrismaReceiver(_receiver);
     }
 
+    function setFeeClaimer(address _claimer) external onlyOwner{
+        feeClaimer = _claimer;
+        emit SetFeeClaimer(_claimer);
+    }
+
     function rescueToken(address _token, address _to) external onlyOwner{
         require(_token != prisma, "not allowed");
 
@@ -115,6 +122,12 @@ contract FeeDepositV2 {
     function processFees() external {
         if(UseDistributors){
             require(distributors[msg.sender], "!auth");
+        }
+
+        //call a "fee claimer" to pull prisma boost fees to this distributor
+        //keep logic in the claimer so that updates can be made on how to handle locks
+        if(feeClaimer != address(0)){
+            IFeeReceiver(feeClaimer).processFees();
         }
 
         //remove call incentive first

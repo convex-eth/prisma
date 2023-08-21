@@ -23,6 +23,7 @@ const Utilities = artifacts.require("Utilities");
 const Burner = artifacts.require("Burner");
 const DropMinter = artifacts.require("DropMinter");
 const ProxyVault = artifacts.require("ProxyVault");
+const FeeClaimer = artifacts.require("FeeClaimer");
 
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -213,9 +214,13 @@ contract("prisma deploy and lock testing", async accounts => {
     contractList.system.feeQueue = feeQueue.address;
     console.log("feeQueue: " +feeQueue.address);
 
-    let receiverVault = await ProxyVault.new(voteproxy.address, addressZero, {from:deployer});
+    let receiverVault = await ProxyVault.new(prismaLocker.address, voteproxy.address, addressZero, {from:deployer});
     contractList.system.receiverVault = receiverVault.address;
     console.log("receiverVault: " +receiverVault.address);
+
+    let feeClaimer = await FeeClaimer.new(receiverVault.address, prisma.address, feeQueue.address, {from:deployer});
+    contractList.system.feeClaimer = feeClaimer.address;
+    console.log("feeClaimer: " +feeClaimer.address);
 
     let dropMinter = await DropMinter.new(cvxPrisma.address, airdrop.address, prismaLocker.address, {from:deployer});
     contractList.system.dropMinter = dropMinter.address;
@@ -234,17 +239,16 @@ contract("prisma deploy and lock testing", async accounts => {
     await booster.setTokenMinter(depositor.address, true, {from:deployer});
     await booster.setTokenMinter(burner.address, true, {from:deployer});
     await booster.setTokenMinter(dropMinter.address, true, {from:deployer});
-    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
-    await unlockAccount(voteproxy.address)
-    await cvxPrisma.revokeOwnership({from:voteproxy.address,gasPrice:0});
-    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
-    await booster.setTokenMinter(deployer, true, {from:deployer}).catch(a=>console.log("revert set operators: " +a));
+    await feeQueue.setFeeClaimer(feeClaimer.address,{from:deployer});
+    await booster.setFeeQueue(receiverVault.address, false, feeClaimer.address, {from:deployer});
     console.log("set operators")
 
-    await booster.setFeeQueue(receiverVault.address, true, {from:deployer});
+    await booster.setBoosterFees(true,2000,addressZero,{from:deployer});
+    console.log("set booster fees");
+
     await staking.addReward(prisma.address, stakingFeeReceiver.address, {from:deployer});
     await staking.addReward(cvx.address, stakingFeeReceiver.address, {from:deployer});
-    console.log("staking params set")
+    console.log("staking rewards set")
 
     let cvxdistro = await ICvxDistribution.at(contractList.system.cvxDistro);
     await cvxdistro.setWeight(stakingFeeReceiver.address, 100, {from:deployer});
@@ -278,6 +282,13 @@ contract("prisma deploy and lock testing", async accounts => {
     await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
 
     
+    console.log("\n-- test ownership --");
+    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
+    await unlockAccount(voteproxy.address)
+    await cvxPrisma.revokeOwnership({from:voteproxy.address,gasPrice:0});
+    await cvxPrisma.owner().then(a=>console.log("cvxprisma owner: " +a))
+    await booster.setTokenMinter(deployer, true, {from:deployer}).catch(a=>console.log("revert set operators: " +a));
+
     console.log("\n-- start rewards ---");
 
     await advanceTime(day*5);
