@@ -174,9 +174,10 @@ contract("prisma deploy and lock testing", async accounts => {
     await prisma.mint(airdrop.address, web3.utils.toWei("1000000.0", "ether"),{from:deployer});
     await prisma.balanceOf(airdrop.address).then(a=>console.log("balance on airdrop: " +a))
 
-    // let vault = await PrismaVault.new(addresProvider, prisma.address, prismaLocker.address, addressZero, addressZero, addressZero, addressZero, 20, [],[], {from:deployer,gasPrice:0})
-    // contractList.prisma.vault = vault.address;
-    // console.log("vault: " +vault.address);
+    let vault = await PrismaVault.new(prisma.address, prismaLocker.address, {from:deployer,gasPrice:0})
+    contractList.prisma.vault = vault.address;
+    console.log("vault: " +vault.address);
+    await prisma.mint(vault.address, web3.utils.toWei("10000000.0", "ether"),{from:deployer});
 
     //let incentiveVote = await IncentiveVoting.new(addresProvider, addressZero, vault.address, {from:deployer});
 
@@ -198,7 +199,7 @@ contract("prisma deploy and lock testing", async accounts => {
     contractList.system.burner = burner.address;
     console.log("burner: " +burner.address);
 
-    let booster = await Booster.new(voteproxy.address, depositor.address, addressZero, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer});
+    let booster = await Booster.new(voteproxy.address, depositor.address, prismaLocker.address, vault.address, addressZero, addressZero, prisma.address, cvxPrisma.address, {from:deployer});
     contractList.system.booster = booster.address;
     console.log("booster: " +booster.address);
 
@@ -243,6 +244,7 @@ contract("prisma deploy and lock testing", async accounts => {
     await booster.setFeeQueue(receiverVault.address, false, feeClaimer.address, {from:deployer});
     console.log("set operators")
 
+    await booster.prismaVault().then(a=>console.log("set fees to pvault: " +a))
     await booster.setBoosterFees(true,2000,addressZero,{from:deployer});
     console.log("set booster fees");
 
@@ -341,6 +343,38 @@ contract("prisma deploy and lock testing", async accounts => {
     await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
     await prismaLocker.getAccountBalances(userB).then(a=>console.log("getAccountBalances userB: " +a.locked))
     await cvxPrisma.balanceOf(userB).then(a=>console.log("cvxPrisma balance of userB: " +a));
+
+
+
+    console.log("\n-- boost fee claim ---");
+
+    await vault.testaddStoredPending(voteproxy.address, web3.utils.toWei("1000.0", "ether"));
+    await vault.claimableBoostDelegationFees(voteproxy.address).then(a=>console.log("claimable fees: " +a));
+    await booster.feeQueue().then(a=>console.log("booster feeQueue: " +a))
+    console.log("receiverVault: " +receiverVault.address);
+    await prismaLocker.getAccountBalances(receiverVault.address).then(a=>console.log("getAccountBalances receiverVault: " +a.locked))
+    await prisma.balanceOf(receiverVault.address).then(a=>console.log("prisma balance of receiverVault: " +a));
+    await booster.claimFees();
+    console.log("fees claimed");
+    await vault.claimableBoostDelegationFees(voteproxy.address).then(a=>console.log("claimable fees: " +a));
+    await prismaLocker.getAccountBalances(receiverVault.address).then(a=>console.log("getAccountBalances receiverVault: " +a.locked))
+    await prisma.balanceOf(receiverVault.address).then(a=>console.log("prisma balance of receiverVault: " +a));
+
+    console.log("\n-- distribute boost revenue ---");
+
+    await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
+    await prisma.balanceOf(contractList.system.treasury).then(a=>console.log("prisma balance of treasury: " +a));
+    await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
+
+    await feeQueue.processFees({from:deployer});
+    console.log("feeQueue processFees()");
+
+    await prisma.balanceOf(staking.address).then(a=>console.log("prisma balance of staking: " +a));
+    await prisma.balanceOf(contractList.system.treasury).then(a=>console.log("prisma balance of treasury: " +a));
+    await utility.stakingRewardRates().then(a=>console.log("staking rewards: " +JSON.stringify(a)));
+
+
+
   });
 });
 

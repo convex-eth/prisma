@@ -52,18 +52,18 @@ contract BoostCalculator is SystemStart {
     ITokenLocker public immutable locker;
 
     // initial number of weeks where all accounts recieve max boost
-    uint public immutable MAX_BOOST_GRACE_WEEKS;
+    uint256 public immutable MAX_BOOST_GRACE_WEEKS;
 
     // week -> total weekly lock weight
     // tracked locally to avoid repeated external calls
     uint40[65535] totalWeeklyWeights;
-    // account -> week -> % of lock weight (where type(uint32).max represents 100%)
+    // account -> week -> % of lock weight (where 1e9 represents 100%)
     mapping(address account => uint32[65535]) accountWeeklyLockPct;
 
-    constructor(address _addressProvider, ITokenLocker _locker, uint _graceWeeks) SystemStart(_addressProvider) {
-        require(_graceWeeks > 0);
+    constructor(address _prismaCore, ITokenLocker _locker, uint256 _graceWeeks) SystemStart(_prismaCore) {
+        require(_graceWeeks > 0, "Grace weeks cannot be 0");
         locker = _locker;
-        MAX_BOOST_GRACE_WEEKS = _graceWeeks;
+        MAX_BOOST_GRACE_WEEKS = _graceWeeks + getWeek();
     }
 
     /**
@@ -76,20 +76,55 @@ contract BoostCalculator is SystemStart {
      */
     function getBoostedAmount(
         address account,
-        uint amount,
-        uint previousAmount,
-        uint totalWeeklyEmissions
-    ) external view returns (uint adjustedAmount) {
-        uint week = getWeek();
+        uint256 amount,
+        uint256 previousAmount,
+        uint256 totalWeeklyEmissions
+    ) external view returns (uint256 adjustedAmount) {
+        uint256 week = getWeek();
         if (week < MAX_BOOST_GRACE_WEEKS) return amount;
         week -= 1;
 
-        uint accountWeight = locker.getAccountWeightAt(account, week);
-        uint totalWeight = locker.getTotalWeightAt(week);
+        uint256 accountWeight = locker.getAccountWeightAt(account, week);
+        uint256 totalWeight = locker.getTotalWeightAt(week);
         if (totalWeight == 0) totalWeight = 1;
-        uint pct = (type(uint32).max * accountWeight) / totalWeight;
+        uint256 pct = (1e9 * accountWeight) / totalWeight;
         if (pct == 0) pct = 1;
         return _getBoostedAmount(amount, previousAmount, totalWeeklyEmissions, pct);
+    }
+
+    /**
+        @notice Get the remaining claimable amounts this week that will receive boost
+        @param claimant address to query boost amounts for
+        @param previousAmount Amount that was already claimed in the current week
+        @param totalWeeklyEmissions Total PRISMA emissions released this week
+        @return maxBoosted remaining claimable amount that will receive max boost
+        @return boosted remaining claimable amount that will receive some amount of boost (including max boost)
+     */
+    function getClaimableWithBoost(
+        address claimant,
+        uint256 previousAmount,
+        uint256 totalWeeklyEmissions
+    ) external view returns (uint256 maxBoosted, uint256 boosted) {
+        uint256 week = getWeek();
+        if (week < MAX_BOOST_GRACE_WEEKS) {
+            uint256 remaining = totalWeeklyEmissions - previousAmount;
+            return (remaining, remaining);
+        }
+        week -= 1;
+
+        uint256 accountWeight = locker.getAccountWeightAt(claimant, week);
+        uint256 totalWeight = locker.getTotalWeightAt(week);
+        if (totalWeight == 0) totalWeight = 1;
+        uint256 pct = (1e9 * accountWeight) / totalWeight;
+        if (pct == 0) return (0, 0);
+
+        uint256 maxBoostable = (totalWeeklyEmissions * pct) / 1e9;
+        uint256 fullDecay = maxBoostable * 2;
+
+        return (
+            previousAmount >= maxBoostable ? 0 : maxBoostable - previousAmount,
+            previousAmount >= fullDecay ? 0 : fullDecay - maxBoostable
+        );
     }
 
     /**
@@ -103,25 +138,25 @@ contract BoostCalculator is SystemStart {
      */
     function getBoostedAmountWrite(
         address account,
-        uint amount,
-        uint previousAmount,
-        uint totalWeeklyEmissions
-    ) external returns (uint adjustedAmount) {
-        uint week = getWeek();
+        uint256 amount,
+        uint256 previousAmount,
+        uint256 totalWeeklyEmissions
+    ) external returns (uint256 adjustedAmount) {
+        uint256 week = getWeek();
         if (week < MAX_BOOST_GRACE_WEEKS) return amount;
         week -= 1;
 
-        uint pct = accountWeeklyLockPct[account][week];
+        uint256 pct = accountWeeklyLockPct[account][week];
         if (pct == 0) {
-            uint totalWeight = totalWeeklyWeights[week];
+            uint256 totalWeight = totalWeeklyWeights[week];
             if (totalWeight == 0) {
                 totalWeight = locker.getTotalWeightAt(week);
                 if (totalWeight == 0) totalWeight = 1;
                 totalWeeklyWeights[week] = uint40(totalWeight);
             }
 
-            uint accountWeight = locker.getAccountWeightAt(account, week);
-            pct = (type(uint32).max * accountWeight) / totalWeight;
+            uint256 accountWeight = locker.getAccountWeightAt(account, week);
+            pct = (1e9 * accountWeight) / totalWeight;
             if (pct == 0) pct = 1;
             accountWeeklyLockPct[account][week] = uint32(pct);
         }
@@ -130,43 +165,48 @@ contract BoostCalculator is SystemStart {
     }
 
     function _getBoostedAmount(
-        uint amount,
-        uint previousAmount,
-        uint totalWeeklyEmissions,
-        uint pct
-    ) internal pure returns (uint adjustedAmount) {
+        uint256 amount,
+        uint256 previousAmount,
+        uint256 totalWeeklyEmissions,
+        uint256 pct
+    ) internal pure returns (uint256 adjustedAmount) {
         // we use 1 to indicate no lock weight: no boost
         if (pct == 1) return amount / 2;
 
-        uint total = amount + previousAmount;
-        uint maxBoostable = (totalWeeklyEmissions * pct) / type(uint32).max;
-        uint fullDecay = maxBoostable * 2;
+        uint256 total = amount + previousAmount;
+        uint256 maxBoostable = (totalWeeklyEmissions * pct) / 1e9;
+        uint256 fullDecay = maxBoostable * 2;
 
-        // if max boostable amount exceeds newly minted total, we have full boost on the claim
+        // entire claim receives max boost
         if (maxBoostable >= total) return amount;
 
-        // if 2x the max boostable amount is less than the previous minted total, no boost remains
+        // entire claim receives no boost
         if (fullDecay <= previousAmount) return amount / 2;
 
-        // apply any remaining max boostable amount
+        // apply max boost for partial claim
         if (previousAmount < maxBoostable) {
             adjustedAmount = maxBoostable - previousAmount;
             amount -= adjustedAmount;
             previousAmount = maxBoostable;
         }
 
-        // if remaining amount exceeds the decay amount, remove the balance with no boost
+        // apply no boost for partial claim
         if (total > fullDecay) {
             adjustedAmount += (total - fullDecay) / 2;
             amount -= (total - fullDecay);
         }
 
-        // calculate adjusted amount based on the final boost and add to adjusted amount
-        uint finalBoosted = amount - (amount * (previousAmount + amount - maxBoostable)) / maxBoostable / 2;
+        // simplified calculation if remaining claim is the entire decay amount
+        if (amount == maxBoostable) return adjustedAmount + ((maxBoostable * 3) / 4);
+
+        // remaining calculations handle claim that spans only part of the decay
+
+        // get adjusted amount based on the final boost
+        uint256 finalBoosted = amount - (amount * (previousAmount + amount - maxBoostable)) / maxBoostable / 2;
         adjustedAmount += finalBoosted;
 
-        // calculate adjusted amount based on the initial boost
-        uint initialBoosted = amount - (amount * (previousAmount - maxBoostable)) / maxBoostable / 2;
+        // get adjusted amount based on the initial boost
+        uint256 initialBoosted = amount - (amount * (previousAmount - maxBoostable)) / maxBoostable / 2;
         // with linear decay, adjusted amount is half of the difference between initial and final boost amounts
         adjustedAmount += (initialBoosted - finalBoosted) / 2;
 

@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
 import "./interfaces/IStaker.sol";
 import "./interfaces/IFeeReceiver.sol";
 import "./interfaces/IPrismaVault.sol";
+import "./interfaces/ITokenLocker.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
@@ -26,6 +27,7 @@ contract Booster{
     address public immutable prismaVault;
     address public immutable prismaVoting;
     address public immutable prismaIncentives;
+    address public immutable prismaLocker;
     address public owner;
     address public pendingOwner;
 
@@ -37,10 +39,11 @@ contract Booster{
     bool public feeQueueProcess;
 
 
-    constructor(address _proxy, address _depositor, address _pvault, address _pVoting, address _pIncentives, address _prisma, address _cvxPrisma) {
+    constructor(address _proxy, address _depositor, address _plocker, address _pvault, address _pVoting, address _pIncentives, address _prisma, address _cvxPrisma) {
         proxy = _proxy;
         prismaDepositor = _depositor;
         prisma = _prisma;
+        prismaLocker = _plocker;
         prismaVault = _pvault;
         prismaVoting = _pVoting;
         prismaIncentives = _pIncentives;
@@ -124,7 +127,7 @@ contract Booster{
     }
 
     function setBoosterFees(bool _isEnabled, uint _feePct, address _callback) external onlyOwner{
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setBoostDelegationParams(bool,uint,address)")), _isEnabled, _feePct, _callback);
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setBoostDelegationParams(bool,uint256,address)")), _isEnabled, _feePct, _callback);
         _proxyCall(prismaVault,data);
     }
 
@@ -162,7 +165,7 @@ contract Booster{
         require(feeQueue != address(0),"!fee queue");
 
         //check if queued rewards, then claim
-        if(IPrismaVault(prismaVault).claimableBoostDelegationFees(proxy) > 0){
+        if(IPrismaVault(prismaVault).claimableBoostDelegationFees(proxy) >= ITokenLocker(prismaLocker).lockToTokenRatio()){
             //claim
             bytes memory data = abi.encodeWithSelector(bytes4(keccak256("claimBoostDelegationFees(address)")), feeQueue);
             _proxyCall(prismaVault,data);

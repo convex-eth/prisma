@@ -835,7 +835,7 @@ contract TokenLocker is SystemStart {
         totalWeeklyWeights[systemWeek] = uint40(getTotalWeightWrite() - decreasedWeight);
 
         lockToken.transfer(msg.sender, amountToWithdraw * lockToTokenRatio);
-        lockToken.transfer(addressProvider.feeReceiver(), penaltyTotal * lockToTokenRatio);
+        // lockToken.transfer(addressProvider.feeReceiver(), penaltyTotal * lockToTokenRatio);
         emit LocksWithdrawn(msg.sender, amountToWithdraw, penaltyTotal);
 
         return amountToWithdraw;

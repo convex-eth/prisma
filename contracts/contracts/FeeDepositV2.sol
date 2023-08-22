@@ -30,7 +30,7 @@ contract FeeDepositV2 {
 
     mapping(address => bool) public distributors;
     mapping(address => bool) public requireProcessing;
-    bool public UseDistributors = true;
+    bool public UseDistributors;
 
     event SetCallIncentive(uint256 _amount);
     event SetvlCvxIncentive(uint256 _amount);
@@ -51,6 +51,10 @@ contract FeeDepositV2 {
         platformReceiver = address(0x1389388d01708118b497f59521f6943Be2541bb7);
         cvxPrismaReceiver = _initialReceiver;
         requireProcessing[_initialReceiver] = true;
+
+        UseDistributors = true;
+        distributors[msg.sender] = true;
+        emit AddDistributor(msg.sender, true);
     }
 
     modifier onlyOwner() {
