@@ -24,6 +24,7 @@ const Burner = artifacts.require("Burner");
 const DropMinter = artifacts.require("DropMinter");
 const ProxyVault = artifacts.require("ProxyVault");
 const FeeClaimer = artifacts.require("FeeClaimer");
+const BoostDelegate = artifacts.require("BoostDelegate");
 
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -150,6 +151,13 @@ contract("prisma deploy and lock testing", async accounts => {
     await unlockAccount(multisig);
 
     //deploy
+    // let prisma = await PrismaToken.at(contractList.prisma.prisma);
+    // let prismaLocker = await TokenLocker.at(contractList.prisma.prismaLocker);
+    // let vault = await PrismaVault.at(contractList.prisma.vault);
+    // let incentiveVoting = await IncentiveVoting.at(contractList.prisma.incentiveVoting);
+    // let adminVoting = await AdminVoting.at(contractList.prisma.adminVoting);
+    // await unlockAccount(vault.address);
+    // await prisma.mintToVault(web3.utils.toWei("100000000.0", "ether"),{from:vault.address,gasPrice:0})
     console.log("-- deploy prisma --");
     let prisma = await PrismaToken.new({from:deployer,gasPrice:0});
     contractList.prisma.prisma = prisma.address;
@@ -179,7 +187,7 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("vault: " +vault.address);
     await prisma.mint(vault.address, web3.utils.toWei("10000000.0", "ether"),{from:deployer});
 
-    //let incentiveVote = await IncentiveVoting.new(addresProvider, addressZero, vault.address, {from:deployer});
+    // let incentiveVote = await IncentiveVoting.new(addresProvider, addressZero, vault.address, {from:deployer});
 
 
     console.log("\n-- deploy convex --\n");
@@ -227,6 +235,10 @@ contract("prisma deploy and lock testing", async accounts => {
     contractList.system.dropMinter = dropMinter.address;
     console.log("dropMinter: " +dropMinter.address);
 
+    let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 2000, {from:deployer});
+    contractList.system.boostDelegate = boostDelegate.address;
+    console.log("boostDelegate: " +boostDelegate.address);
+
     let utility = await Utilities.new(voteproxy.address, prismaLocker.address, staking.address, {from:deployer});
     contractList.system.utility = utility.address;
     console.log("utility: " +utility.address);
@@ -245,7 +257,7 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("set operators")
 
     await booster.prismaVault().then(a=>console.log("set fees to pvault: " +a))
-    await booster.setBoosterFees(true,2000,addressZero,{from:deployer});
+    await booster.setBoosterFees(true,2000,boostDelegate.address,{from:deployer});
     console.log("set booster fees");
 
     await staking.addReward(prisma.address, stakingFeeReceiver.address, {from:deployer});
@@ -261,12 +273,15 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("airdrop minter set")
 
     console.log("\n-- initial lock --\n");
+    await unlockAccount(vault.address);
+    await prisma.transfer(userA, web3.utils.toWei("1000000.0", "ether"),{from:vault.address,gasPrice:0});
+    await prisma.balanceOf(userA).then(a=>console.log("balance on userA: " +a))
     await prisma.transfer(voteproxy.address, web3.utils.toWei("100.0", "ether"),{from:userA});
     // await prisma.transfer(voteproxy.address, "100" ,{from:userA});
     console.log("transfered")
     await depositor.initialLock({from:deployer});
     console.log("initialLock");
-    await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
+    // await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
     await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
     await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
 
@@ -279,7 +294,7 @@ contract("prisma deploy and lock testing", async accounts => {
     console.log("deposited")
     await prisma.balanceOf(userA).then(a=>console.log("prisma balance: " +a))
     await cvxPrisma.balanceOf(userA).then(a=>console.log("cvxprisma balance: " +a))
-    await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
+    // await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
     await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
     await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
 
@@ -311,7 +326,6 @@ contract("prisma deploy and lock testing", async accounts => {
     // await cvxPrisma.approve(staking.address,web3.utils.toWei("1000000000000.0", "ether"),{from:userA});
     // await staking.deposit(web3.utils.toWei("1000.0", "ether"),true,{from:userA});
     // console.log("user A deposit staking")
-    // await prismaLocker.accountLockData(voteproxy.address).then(a=>console.log("lock data: " +JSON.stringify(a)))
     // await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
     // await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
     // await staking.stake(web3.utils.toWei("1000.0", "ether"),{from:userA});

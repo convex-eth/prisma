@@ -29,6 +29,10 @@ contract PrismaToken is ERC20{// is OFT, IERC2612 {
         locker = _locker;
     }
 
+    function mintToVault(uint256 _totalSupply) external returns (bool){
+        
+    }
+
     function transferToLocker(address _from, uint256 _amount) external returns (bool){
         require(msg.sender == locker, "!locker");
         _transfer(_from, locker, _amount);
