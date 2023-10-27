@@ -19,7 +19,7 @@ contract cvxPrismaToken is ERC20 {
         owner = _owner;
     }
 
-    function setOperators(address _operator, bool _valid) external {
+    function setOperator(address _operator, bool _valid) external {
         require(msg.sender == owner, "!auth");
         operators[_operator] = _valid;
         emit SetOperator(_operator, _valid);

@@ -137,7 +137,7 @@ contract Booster{
     }
 
     function setTokenMinter(address _operator, bool _valid) external onlyOwner{
-        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setOperators(address,bool)")), _operator, _valid);
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setOperator(address,bool)")), _operator, _valid);
         _proxyCall(cvxPrisma,data);
     }
 
