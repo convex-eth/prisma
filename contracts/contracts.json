@@ -1,18 +1,18 @@
 {
     "system": {
-        "deployer": "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277",
+        "deployer": "0xDd2f2858964c17486E1b8A7E337a5732170E3320",
+        "convexMainDeployer": "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277",
         "multisig": "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB",
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
         "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
-        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
-        "voteProxy": "",
-        "booster": ""
+        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6"
     },
     "prisma": {
-        "prisma": "",
-        "prismaLocker": "",
-        "treasury": "",
-        "incentiveVoting": "",
-        "adminVoting": ""
+        "prisma": "0xdA47862a83dac0c112BA89c6abC2159b95afd71C",
+        "prismaLocker": "0x3f78544364c3eCcDCe4d9C89a630AEa26122829d",
+        "vault": "0x06bDF212C290473dCACea9793890C5024c7Eb02c",
+        "incentiveVoting": "0xfd8DF0Db401Ab7EC7a06a8465134FA32132e850C",
+        "adminVoting": "0xC5F87695cABBF16F81133CaBbc7CCC073E648139",
+        "airdrop": ""
     }
 }

@@ -13,7 +13,7 @@ contract cvxPrismaToken is ERC20 {
     constructor(address _owner)
         ERC20(
             "Convex Prisma",
-            "Prisma"
+            "cvxPrisma"
         )
     {
         owner = _owner;
