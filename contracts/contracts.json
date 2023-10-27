@@ -5,7 +5,19 @@
         "multisig": "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB",
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
         "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
-        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6"
+        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
+        "voteProxy": "0x8ad7a9e2B3Cd9214f36Cb871336d8ab34DdFdD5b",
+        "cvxPrisma": "0x34635280737b5BFe6c7DC2FC3065D60d66e78185",
+        "depositor": "0x61404F7c2d8b1F3373eb3c6e8C4b8d8332c2D5B8",
+        "burner": "0xCFC7B36fA3B59CA963a44c86c2C369bC311896E5",
+        "booster": "0xcce10d2d2E71D7803242C0D72040Ede966a2de96",
+        "cvxPrismaStaking": "0x0c73f1cFd5C9dFc150C8707Aa47Acbd14F0BE108",
+        "stakingFeeReceiver": "0xaF92400476cd81C7379bB54fD2646E8fa476Cf3F",
+        "feeDeposit": "0x4B33E944E4Ae1Cb58ABfED5a16a4E25b041Fb5d5",
+        "receiverVault": "0xb20b384C2F958f2100E14C5048922613F937674A",
+        "feeClaimer": "0x77B459D78E814D2dAb2832194C72322aa46bd576",
+        "boostDelegate": "0x058a5B9C0cfBBc7a0b736dF0D76c11e5F9A4ff63",
+        "utility": "0x3fc264C5154D16c0eB765F6dd12A55Bdc18F7951"
     },
     "prisma": {
         "prisma": "0xdA47862a83dac0c112BA89c6abC2159b95afd71C",

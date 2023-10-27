@@ -119,7 +119,7 @@ const fastForward = async seconds => {
   await mineBlock();
 };
 
-contract("prisma deploy and lock testing", async accounts => {
+contract("deploy minimal system", async accounts => {
   it("should successfully run", async () => {
     
     let deployer = contractList.system.deployer;
@@ -147,8 +147,8 @@ contract("prisma deploy and lock testing", async accounts => {
       console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
     }
     const day = 86400;
-    await unlockAccount(deployer);
-    await unlockAccount(multisig);
+    // await unlockAccount(deployer);
+    // await unlockAccount(multisig);
     console.log("using deployer: " +deployer);
 
     //deploy
@@ -167,43 +167,43 @@ contract("prisma deploy and lock testing", async accounts => {
     let voteproxy = await PrismaVoterProxy.new(prisma.address, prismaLocker.address,{from:deployer});
     contractList.system.voteProxy = voteproxy.address;
     console.log("voteproxy: " +voteproxy.address);
-
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let cvxPrisma = await cvxPrismaToken.new(voteproxy.address, {from:deployer});
     contractList.system.cvxPrisma = cvxPrisma.address;
     console.log("cvxPrisma: " +cvxPrisma.address);
-
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let depositor = await PrismaDepositor.new(voteproxy.address, cvxPrisma.address, prisma.address, prismaLocker.address, {from:deployer});
     contractList.system.depositor = depositor.address;
     console.log("depositor: " +depositor.address);
-
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let burner = await Burner.new(cvxPrisma.address, {from:deployer});
     contractList.system.burner = burner.address;
     console.log("burner: " +burner.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let booster = await Booster.new(voteproxy.address, depositor.address, prismaLocker.address, vault.address, adminVoting.address, incentiveVoting.address, prisma.address, cvxPrisma.address, {from:deployer});
     contractList.system.booster = booster.address;
     console.log("booster: " +booster.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let staking = await cvxPrismaStaking.new(voteproxy.address, prisma.address, cvxPrisma.address, depositor.address, {from:deployer});
     contractList.system.cvxPrismaStaking = staking.address;
     console.log("cvxPrismaStaking: " +staking.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let stakingFeeReceiver = await FeeReceiverCvxPrisma.new(prisma.address, staking.address, {from:deployer});
     contractList.system.stakingFeeReceiver = stakingFeeReceiver.address;
     console.log("stakingFeeReceiver: " +stakingFeeReceiver.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let feeDeposit = await FeeDepositV2.new(voteproxy.address, prisma.address, cvxPrisma.address, stakingFeeReceiver.address, {from:deployer});
     contractList.system.feeDeposit = feeDeposit.address;
     console.log("feeDeposit: " +feeDeposit.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let receiverVault = await ProxyVault.new(prismaLocker.address, voteproxy.address, addressZero, {from:deployer});
     contractList.system.receiverVault = receiverVault.address;
     console.log("receiverVault: " +receiverVault.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let feeClaimer = await FeeClaimer.new(receiverVault.address, prisma.address, feeDeposit.address, {from:deployer});
     contractList.system.feeClaimer = feeClaimer.address;
     console.log("feeClaimer: " +feeClaimer.address);
-
+  jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     // let dropMinter = await DropMinter.new(cvxPrisma.address, airdrop.address, prismaLocker.address, {from:deployer});
     // contractList.system.dropMinter = dropMinter.address;
     // console.log("dropMinter: " +dropMinter.address);
@@ -211,7 +211,7 @@ contract("prisma deploy and lock testing", async accounts => {
     let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 2000, {from:deployer});
     contractList.system.boostDelegate = boostDelegate.address;
     console.log("boostDelegate: " +boostDelegate.address);
-
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     let utility = await Utilities.new(voteproxy.address, prismaLocker.address, staking.address, {from:deployer});
     contractList.system.utility = utility.address;
     console.log("utility: " +utility.address);

@@ -119,7 +119,7 @@ const fastForward = async seconds => {
   await mineBlock();
 };
 
-contract("prisma deploy and lock testing", async accounts => {
+contract("deploy airdop minter", async accounts => {
   it("should successfully run", async () => {
     
     let deployer = contractList.system.deployer;
