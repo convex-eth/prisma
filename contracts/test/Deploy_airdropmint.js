@@ -141,37 +141,47 @@ contract("deploy airdop minter", async accounts => {
     userNames[userD] = "D";
     userNames[userZ] = "Z";
 
-    const advanceTime = async (secondsElaspse) => {
-      await time.increase(secondsElaspse);
-      await time.advanceBlock();
-      console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
-    }
-    const day = 86400;
-    await unlockAccount(deployer);
-    await unlockAccount(multisig);
-    let convexMainDeployer = contractList.system.convexMainDeployer;
-    await unlockAccount(convexMainDeployer);
-    console.log("using deployer: " +deployer);
+    // const advanceTime = async (secondsElaspse) => {
+    //   await time.increase(secondsElaspse);
+    //   await time.advanceBlock();
+    //   console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
+    // }
+    // const day = 86400;
+    // await unlockAccount(deployer);
+    // await unlockAccount(multisig);
+    // let convexMainDeployer = contractList.system.convexMainDeployer;
+    // await unlockAccount(convexMainDeployer);
+    // console.log("using deployer: " +deployer);
 
     //deploy
     console.log("--- use live prisma ---")    
-    let airdrop = await AirdropDistributor.at(contractList.prisma.airdrop);
-    console.log("airdrop: " +airdrop.address);
+    let airdrop_vecrv = await AirdropDistributor.at(contractList.prisma.airdrop_vecrv);
+    let airdrop_points = await AirdropDistributor.at(contractList.prisma.airdrop_points);
+    console.log("airdrop_vecrv: " +airdrop_vecrv.address);
+    console.log("airdrop_points: " +airdrop_points.address);
 
     console.log("\n-- deploy convex --\n");
+    let booster = await Booster.at(contractList.system.booster)
+    let dropMinterVecrv = await DropMinter.new(contractList.system.cvxPrisma, airdrop_vecrv.address, contractList.prisma.prismaLocker, {from:deployer});
+    contractList.system.dropMinterVecrv = dropMinterVecrv.address;
+    console.log("dropMinterVecrv: " +dropMinterVecrv.address);
+    
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
 
-    let dropMinter = await DropMinter.new(contractList.system.cvxPrisma, airdrop.address, contractList.prisma.prismaLocker, {from:deployer});
-    contractList.system.dropMinter = dropMinter.address;
-    console.log("dropMinter: " +dropMinter.address);
+    let dropMinterPoints = await DropMinter.new(contractList.system.cvxPrisma, airdrop_points.address, contractList.prisma.prismaLocker, {from:deployer});
+    contractList.system.dropMinterPoints = dropMinterPoints.address;
+    console.log("dropMinterPoints: " +dropMinterPoints.address);
     
     jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
 
     console.log("\n-- setup --\n");
 
-    await booster.setTokenMinter(dropMinter.address, true, {from:deployer});
+    await booster.setTokenMinter(dropMinterVecrv.address, true, {from:deployer});
+    await booster.setTokenMinter(dropMinterPoints.address, true, {from:deployer});
     console.log("add drop minter")
 
-    await booster.setAirdropMinter(airdrop.address, dropMinter.address, {from:deployer});
+    await booster.setAirdropMinter(airdrop_vecrv.address, dropMinterVecrv.address, {from:deployer});
+    await booster.setAirdropMinter(airdrop_points.address, dropMinterPoints.address, {from:deployer});
     console.log("airdrop minter set")
 
 
