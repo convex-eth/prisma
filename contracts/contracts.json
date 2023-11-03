@@ -16,8 +16,9 @@
         "feeDeposit": "0x4B33E944E4Ae1Cb58ABfED5a16a4E25b041Fb5d5",
         "receiverVault": "0xb20b384C2F958f2100E14C5048922613F937674A",
         "feeClaimer": "0x77B459D78E814D2dAb2832194C72322aa46bd576",
-        "boostDelegate": "0x058a5B9C0cfBBc7a0b736dF0D76c11e5F9A4ff63",
+        "boostDelegate": "0x1933c974a70d69658F67bAa121e973985D42cCa8",
         "utility": "0x3fc264C5154D16c0eB765F6dd12A55Bdc18F7951",
+        "vestingClaim": "0x7e2Ca1134dC44B5D368575Da316d87ac9B9065E7",
         "dropMinterVecrv": "0xAA8d6714cE35951E9F0FDdC16D62898fD55635cB",
         "dropMinterPoints": "0x84F9877caE3d4f5eeA4b544E9484FD7D46a13569"
     },
@@ -27,6 +28,7 @@
         "vault": "0x06bDF212C290473dCACea9793890C5024c7Eb02c",
         "incentiveVoting": "0xfd8DF0Db401Ab7EC7a06a8465134FA32132e850C",
         "adminVoting": "0xC5F87695cABBF16F81133CaBbc7CCC073E648139",
+        "vesting": "0xC72bc1a8cf9b1A218386df641d8bE99B40436A0f",
         "airdrop_vecrv": "0xd49d86B001Fe35bc745Bc6E467B3cc18Cb14b817",
         "airdrop_points": "0x4Bd112ffF755C24C103AdF5879ee914781b99c62"
     }

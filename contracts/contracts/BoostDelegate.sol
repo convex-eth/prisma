@@ -12,7 +12,6 @@ contract BoostDelegate is IBoostDelegate{
     address public immutable cvxprisma;
 
     uint256 public boostFee;
-    mapping(address => bool) mintableClaimers;
     
     event SetMintableClaimer(address indexed _address, bool _valid);
     event SetBoostFee(uint256 _fee);
@@ -28,26 +27,18 @@ contract BoostDelegate is IBoostDelegate{
         _;
     }
 
-    function setMintableClaimer(address _distro, bool _valid) external onlyOwner{
-        mintableClaimers[_distro] = _valid;
-        emit SetMintableClaimer(_distro, _valid);
-    }
-
     function setFee(uint256 _fee) external onlyOwner{
         boostFee = _fee;
         emit SetBoostFee(_fee);
     }
 
     function getFeePct(
-        address claimant,
-        address receiver,
+        address, // claimant,
+        address,// receiver,
         uint,// amount,
         uint,// previousAmount,
         uint// totalWeeklyEmissions
     ) external view returns (uint256 feePct){
-        if(receiver == convexproxy && !mintableClaimers[claimant]){
-            return type(uint256).max;
-        }
         return boostFee;
     }
 
@@ -61,7 +52,6 @@ contract BoostDelegate is IBoostDelegate{
         uint// totalWeeklyEmissions
     ) external returns (bool success){
         if(receiver == convexproxy){
-            if(!mintableClaimers[claimant]) return false;
             if(adjustedAmount == 0) return false;
 
             ITokenMinter(cvxprisma).mint(claimant, adjustedAmount);
