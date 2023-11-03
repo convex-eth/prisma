@@ -2,12 +2,14 @@
 pragma solidity 0.8.19;
 
 import "./interfaces/ITokenMinter.sol";
+import "./interfaces/ITokenLocker.sol";
 import "./interfaces/IBoostDelegate.sol";
 import "./interfaces/IVoterProxy.sol";
 import "./interfaces/IBooster.sol";
 
 contract BoostDelegate is IBoostDelegate{
 
+    address public constant escrow = address(0x3f78544364c3eCcDCe4d9C89a630AEa26122829d);
     address public immutable convexproxy;
     address public immutable cvxprisma;
 
@@ -52,9 +54,11 @@ contract BoostDelegate is IBoostDelegate{
         uint// totalWeeklyEmissions
     ) external returns (bool success){
         if(receiver == convexproxy){
-            if(adjustedAmount == 0) return false;
 
-            ITokenMinter(cvxprisma).mint(claimant, adjustedAmount);
+            adjustedAmount = adjustedAmount / ITokenLocker(escrow).lockToTokenRatio() * ITokenLocker(escrow).lockToTokenRatio();
+            if(adjustedAmount > 0){
+                ITokenMinter(cvxprisma).mint(claimant, adjustedAmount);
+            }
             return true;
         }
 
