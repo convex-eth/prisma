@@ -10,6 +10,7 @@ import "./interfaces/IBooster.sol";
 contract BoostDelegate is IBoostDelegate{
 
     address public constant escrow = address(0x3f78544364c3eCcDCe4d9C89a630AEa26122829d);
+    address public constant prismaVault = address(0x06bDF212C290473dCACea9793890C5024c7Eb02c);
     address public immutable convexproxy;
     address public immutable cvxprisma;
 
@@ -53,6 +54,7 @@ contract BoostDelegate is IBoostDelegate{
         uint,// previousAmount,
         uint// totalWeeklyEmissions
     ) external returns (bool success){
+        require(msg.sender == prismaVault, "!vault");
         if(receiver == convexproxy){
 
             adjustedAmount = adjustedAmount / ITokenLocker(escrow).lockToTokenRatio() * ITokenLocker(escrow).lockToTokenRatio();
