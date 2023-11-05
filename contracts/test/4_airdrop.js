@@ -187,11 +187,15 @@ contract("prisma airdrop claim and mint", async accounts => {
     
 
     //set merkle root
+    let airdropbase = await AirdropDistributor.at(contractList.prisma.airdrop_base_vecrv);
     let airdrop = await AirdropDistributor.at(contractList.prisma.airdrop_vecrv);
 
-    let airowner = "0xD0eFDF01DD8d650bBA8992E2c42D0bC6d441a673";
+    let airbaseowner = "0xD0eFDF01DD8d650bBA8992E2c42D0bC6d441a673";
+    let airowner = "0xd8531a94100f15af7521a7B6E724aC4959E0A025";
+    await unlockAccount(airbaseowner);
     await unlockAccount(airowner);
-    await airdrop.setMerkleRoot("0xc32e0ea56d946a34e25ed9677e00f99b87a19c128d44e657e3841aae9ba803b8",{from:airowner,gasPrice:0});
+    await airdropbase.setMerkleRoot("0xa353d0271199c6c617d696e89e96654f2c9081881e5f8efc497aba0ac95e7cea",{from:airbaseowner,gasPrice:0});
+    await airdrop.setMerkleRoot("0xadd4b434427e8e5c69350b0b9dcc1766106372ccf72a1b691d54376da5edf15b",{from:airowner,gasPrice:0});
     console.log("merkle set");
 
     //return;
@@ -204,22 +208,38 @@ contract("prisma airdrop claim and mint", async accounts => {
     
     
     await unlockAccount(userZ);
-    let proof = [
-      "0x5455a89e0eb9ba83107b077aad7570ed5932a2ea360eefa72d5f87b7efbe5d38",
-        "0x3ccfa9e16f22ce405ce84afd7839a2bce236dd9b66f0c43f93054138c93bdf4e",
-        "0x8f193234197195cef19dc75d52e83dbcdcebd7d828178d7d93a152f2e0169065",
-        "0x4b116abe7a368d98757af115a8100b8413ecdb9f8f359c3bcbb696455f98b314",
-        "0x8ed12728202201d93373bfde8a04a421b0dc8849af17294c01346c8fe7064b8d",
-        "0x003aa7122ae76d3c843d2bfb89d326b512c85d6fbe273936d63c274947fe350a",
-        "0xf069da4019fcd3eb8294e5da238557c9e51b621f7882bce22f39ac3e03e83dfa",
-        "0xb0e6b565c63222fd442d5261e8e1ef8f332679011bff2f980e75623db3d73fcd",
-        "0xd29f99ce3be65aec95cb181b3c31290d79ddc8da6f1ab0e84253f68695de5e3a",
-        "0x40330dd3fc367f97ea97a78fbd213bc88cc795076297ebfe3d8d33ec5c29e791",
-        "0xf56a846322cf77b1ab31ebfd32ce693f22dbd314ba7db276f4aabf8a06df7bf1"
-      ]
-    let amount = "141449";
-    let index = 1275;
-    await airdrop.claim(userZ, voteproxy.address, index, amount, proof, {from:userZ});
+    let proofA = [
+      "0x718c66f9e8ae7cf2fddb57c43a9beb16f929a69a671da83ae83f53772e9f7156",
+      "0xe696a831f435db5a6db6a5e8d995dbd6ec8793a51614b75d67dfa93c668a87f9",
+      "0xeb1b2a9584707c8a07ea4c3ed9677147360b60aaeaf6efc61f56927f720d2785",
+      "0x9aebda894e02d718448b32a6426fe5a1745da54bfb8e1481daa2aa5f25d233c4",
+      "0x5b153f4f60e78253bbcd4ed04d71191222fe4a8ffd8d93ef6944c984216ea0a9",
+      "0xfafeeaf8c1b38b91752aa391c37af921fb217deedfc38c6cc905387ac40f5e00",
+      "0x8bb2683491f1bf03cb9f6bd636cbc82293d956db5c6ddfd0c3546774a76a861e",
+      "0xa5c62b021b8c9534404777ff79921ac57578898fa571c92c776c6186c2bdb6e6",
+      "0xe06b37dd3e00c3c4482e729c378be9f6ff8a2a5fe3e1835f8563c50d7c09bee8",
+      "0xe652303524e77a0e1598c0b9babe5eec8533f9d5f9317dbdc81ab590250cba4c",
+      "0xc4bb8313c0e45a2ad6d41e6c469e112d246a439767ff714aa3cc6acda74a2185",
+      "0xcc6ab941e7cccce2eea965bb4b36dc3a432fa1c2c0e5cb905032bf08ac59c395"
+      ];
+    let proofB = [
+      "0xd0505c5250d4425352f81c3eecd3cba02f3c0198ba7f07615780df66422268fa",
+      "0xcf72ad694defa13fd33c10be953228e857fe3b8a99223c293849c0be2312fb6f",
+      "0x14699f4cfb9251c09df1f4de0128c38cb64445835e302c62255e3695f2e05440",
+      "0xbfa0f3b4789e0f00a04323f73d8eed3d3c327c057cf1a2c3196a4c0022a8247c",
+      "0xd960ecc30dbe0881779bd4fe2aed7d631b1059849af021d81b33497e4680bf44",
+      "0xa220498a47c2979b90e206753c4828ad4b5c97004d147448b583b9bb8f404752",
+      "0xd0d04ee1767257db3a481b1277b88b1ed39808a25000f22383fc831622afc8e3",
+      "0x97a8f05b5db3e477e8ddb25026fb85c847d2e03609ed64ff896f1a2fdbf47ab7",
+      "0x18efabfcc6630852074c48aae6e5694e89ecdafe3de7bf7cfb0183b016a63c3c",
+      "0x1f891d76c8350ab2d2ec341c92d1b58d17961c553b8aed3970cfcf603af13e6e",
+      "0x76218ed175009dba1f9ca5bd7d99337bc49075e33e28177144512f0293cc3387",
+      "0x8baf6fd0ae63a8f385a34d5620d223183a04aa8373ae17fb0fd0863d5cbab391"
+    ];
+    var proofs = [proofA,proofB];
+    let amount = "141350";
+    let index = 1648;
+    await airdrop.claim(userZ, voteproxy.address, index, amount, proofs, {from:userZ});
     console.log("claimed");
 
     await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))

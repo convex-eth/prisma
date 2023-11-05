@@ -29,6 +29,8 @@
         "incentiveVoting": "0xfd8DF0Db401Ab7EC7a06a8465134FA32132e850C",
         "adminVoting": "0xC5F87695cABBF16F81133CaBbc7CCC073E648139",
         "vesting": "0xC72bc1a8cf9b1A218386df641d8bE99B40436A0f",
+        "airdrop_base_vecrv": "0xd49d86B001Fe35bc745Bc6E467B3cc18Cb14b817",
+        "airdrop_base_points": "0x4Bd112ffF755C24C103AdF5879ee914781b99c62",
         "airdrop_vecrv": "0x3ea03249B4D68Be92a8eda027C5ac12e6E419BEE",
         "airdrop_points": "0x2C533357664d8750e5F851f39B2534147F5578af"
     }
