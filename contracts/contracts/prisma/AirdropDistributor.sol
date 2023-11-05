@@ -90,7 +90,7 @@ contract AirdropDistributor is Ownable {
 
         if (claimant != receiver) {
             address callback = claimCallback[receiver];
-            if (callback != address(0)) IClaimCallback(callback).claimCallback(claimant, amount);
+            if (callback != address(0)) IClaimCallback(callback).claimCallback(claimant, receiver, amount);
         }
 
         emit Claimed(claimant, receiver, index, amount * lockToTokenRatio);

@@ -25,6 +25,8 @@ const DropMinter = artifacts.require("DropMinter");
 const ProxyVault = artifacts.require("ProxyVault");
 const FeeClaimer = artifacts.require("FeeClaimer");
 const BoostDelegate = artifacts.require("BoostDelegate");
+const VestingClaim = artifacts.require("VestingClaim");
+const IPrismaVesting = artifacts.require("IPrismaVesting");
 
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -53,6 +55,10 @@ const addAccount = async (address) => {
 };
 
 const unlockAccount = async (address) => {
+  let NETWORK = config.network;
+  if(!NETWORK.includes("debug")){
+    return null;
+  }
   await addAccount(address);
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
@@ -119,7 +125,7 @@ const fastForward = async seconds => {
   await mineBlock();
 };
 
-contract("prisma deploy and lock testing", async accounts => {
+contract("prisma airdrop claim and mint", async accounts => {
   it("should successfully run", async () => {
     
     let deployer = contractList.system.deployer;
@@ -141,14 +147,14 @@ contract("prisma deploy and lock testing", async accounts => {
     userNames[userD] = "D";
     userNames[userZ] = "Z";
 
-    // const advanceTime = async (secondsElaspse) => {
-    //   await time.increase(secondsElaspse);
-    //   await time.advanceBlock();
-    //   console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
-    // }
-    // const day = 86400;
-    // await unlockAccount(deployer);
-    // await unlockAccount(multisig);
+    const advanceTime = async (secondsElaspse) => {
+      await time.increase(secondsElaspse);
+      await time.advanceBlock();
+      console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
+    }
+    const day = 86400;
+    await unlockAccount(deployer);
+    await unlockAccount(multisig);
 
     //deploy
     let prisma = await PrismaToken.at(contractList.prisma.prisma);
@@ -156,6 +162,7 @@ contract("prisma deploy and lock testing", async accounts => {
     let vault = await PrismaVault.at(contractList.prisma.vault);
     let incentiveVoting = await IncentiveVoting.at(contractList.prisma.incentiveVoting);
     let adminVoting = await AdminVoting.at(contractList.prisma.adminVoting);
+    
 
     let voteproxy = await PrismaVoterProxy.at(contractList.system.voteProxy);
     let cvxPrisma = await cvxPrismaToken.at(contractList.system.cvxPrisma)
@@ -176,32 +183,43 @@ contract("prisma deploy and lock testing", async accounts => {
 
     let feeClaimer = await FeeClaimer.at(contractList.system.feeClaimer)
 
-    // let dropMinter = await DropMinter.at(contractList.system.);
-
     let utility = await Utilities.at(contractList.system.utility);
     
-    let oldboostDelegate = await BoostDelegate.at(contractList.system.boostDelegate);
-    console.log("old boost delegate: " +oldboostDelegate.address);
-    // let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 0);
-    // console.log("boostDelegate: " +boostDelegate.address);
 
-    // await booster.setBoosterFees(true,0,boostDelegate.address,{from:deployer});
-    // await booster.setTokenMinter(oldboostDelegate.address, false, {from:deployer});
-    // await booster.setTokenMinter(boostDelegate.address, true, {from:deployer});
-    // console.log("set booster fee/delegate");
+    //set merkle root
+    let airdrop = await AirdropDistributor.at(contractList.prisma.airdrop_vecrv);
 
-    
+    let airowner = "0xD0eFDF01DD8d650bBA8992E2c42D0bC6d441a673";
+    await unlockAccount(airowner);
+    await airdrop.setMerkleRoot("0xc32e0ea56d946a34e25ed9677e00f99b87a19c128d44e657e3841aae9ba803b8",{from:airowner,gasPrice:0});
+    console.log("merkle set");
 
-    await vault.claimableRewardAfterBoost(userZ, userZ, addressZero, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("self claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount +"\nfees: " +a.feeToDelegate));
-    await vault.claimableRewardAfterBoost(userZ, voteproxy.address, voteproxy.address, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("convex claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount+"\nfees: " +a.feeToDelegate));
-    
+    //return;
+
+
+    //test claim
     await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
     await utility.lockedPrisma().then(a=>console.log("lockedPrisma: " +a))
     await cvxPrisma.balanceOf(userZ).then(a=>console.log("uzer z cvxprisma: " +a))
     
+    
     await unlockAccount(userZ);
-    await oldboostDelegate.delegatedBoostCallback(userZ,voteproxy.address,0,web3.utils.toWei("100.0", "ether"),0,0,0).catch(a=>console.log("revert not vault: " +a));
-    // await vault.batchClaimRewards(voteproxy.address, voteproxy.address, ["0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483"], 10000, {from:userZ});
+    let proof = [
+      "0x5455a89e0eb9ba83107b077aad7570ed5932a2ea360eefa72d5f87b7efbe5d38",
+        "0x3ccfa9e16f22ce405ce84afd7839a2bce236dd9b66f0c43f93054138c93bdf4e",
+        "0x8f193234197195cef19dc75d52e83dbcdcebd7d828178d7d93a152f2e0169065",
+        "0x4b116abe7a368d98757af115a8100b8413ecdb9f8f359c3bcbb696455f98b314",
+        "0x8ed12728202201d93373bfde8a04a421b0dc8849af17294c01346c8fe7064b8d",
+        "0x003aa7122ae76d3c843d2bfb89d326b512c85d6fbe273936d63c274947fe350a",
+        "0xf069da4019fcd3eb8294e5da238557c9e51b621f7882bce22f39ac3e03e83dfa",
+        "0xb0e6b565c63222fd442d5261e8e1ef8f332679011bff2f980e75623db3d73fcd",
+        "0xd29f99ce3be65aec95cb181b3c31290d79ddc8da6f1ab0e84253f68695de5e3a",
+        "0x40330dd3fc367f97ea97a78fbd213bc88cc795076297ebfe3d8d33ec5c29e791",
+        "0xf56a846322cf77b1ab31ebfd32ce693f22dbd314ba7db276f4aabf8a06df7bf1"
+      ]
+    let amount = "141449";
+    let index = 1275;
+    await airdrop.claim(userZ, voteproxy.address, index, amount, proof, {from:userZ});
     console.log("claimed");
 
     await prismaLocker.getAccountBalances(voteproxy.address).then(a=>console.log("getAccountBalances: " +a.locked))
