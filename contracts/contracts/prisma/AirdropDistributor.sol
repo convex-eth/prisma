@@ -71,7 +71,7 @@ contract AirdropDistributor is Ownable {
         address receiver,
         uint256 index,
         uint256 amount,
-        bytes32[] calldata //merkleProof
+        bytes32[][2] calldata //merkleProof
     ) external {
         if (msg.sender != claimant) {
             require(msg.sender == owner(), "onlyOwner");
