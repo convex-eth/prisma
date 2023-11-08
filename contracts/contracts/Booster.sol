@@ -33,7 +33,7 @@ contract Booster{
 
     address public rewardManager;
     address public voteManager;
-    address public feeclaimer;
+    address public sweeper;
     bool public isShutdown;
     address public feeQueue;
     bool public feeQueueProcess;
@@ -56,6 +56,11 @@ contract Booster{
 
     modifier onlyOwner() {
         require(owner == msg.sender, "!auth");
+        _;
+    }
+
+    modifier OwnerOrSweeper() {
+        require(owner == msg.sender || sweeper == msg.sender, "!sweeper");
         _;
     }
 
@@ -97,6 +102,12 @@ contract Booster{
         emit VoteManagerChanged(_vmanager);
     }
 
+    function setSnapshotDelegate(address _delegateContract, address _delegate, bytes32 _space) external onlyOwner{
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setDelegate(bytes32,address)")), _space, _delegate);
+        _proxyCall(_delegateContract,data);
+        emit SnapshotDelegateSet(_delegate);
+    }
+
     //make execute() calls to the proxy voter
     function _proxyCall(address _to, bytes memory _data) internal{
         (bool success,) = IStaker(proxy).execute(_to,uint256(0),_data);
@@ -112,10 +123,10 @@ contract Booster{
         emit FeeQueueChanged(_queue, _process, _operator);
     }
 
-    //set who can call claim fees, 0x0 address will allow anyone to call
-    function setFeeClaimer(address _claimer) external onlyOwner{
-        feeclaimer = _claimer;
-        emit FeeClaimerChanged(_claimer);
+    //give an address access to sweep tokens
+    function setTokenSweeper(address _sweeper) external onlyOwner{
+        sweeper = _sweeper;
+        emit TokenSweeperChanged(_sweeper);
     }
     
     //shutdown this contract.
@@ -142,13 +153,13 @@ contract Booster{
     }
 
     //recover tokens on this contract
-    function recoverERC20(address _tokenAddress, uint256 _tokenAmount, address _withdrawTo) external onlyOwner{
+    function recoverERC20(address _tokenAddress, uint256 _tokenAmount, address _withdrawTo) external OwnerOrSweeper{
         IERC20(_tokenAddress).safeTransfer(_withdrawTo, _tokenAmount);
         emit Recovered(_tokenAddress, _tokenAmount);
     }
 
     //recover tokens on the proxy
-    function recoverERC20FromProxy(address _tokenAddress, uint256 _tokenAmount, address _withdrawTo) external onlyOwner{
+    function recoverERC20FromProxy(address _tokenAddress, uint256 _tokenAmount, address _withdrawTo) external OwnerOrSweeper{
         require(_tokenAddress != prisma,"protected token");
         bytes memory data = abi.encodeWithSelector(bytes4(keccak256("transfer(address,uint256)")), _withdrawTo, _tokenAmount);
         _proxyCall(_tokenAddress,data);
@@ -161,7 +172,6 @@ contract Booster{
 
     //claim fees - claim boost fees and allocate to a feeQueue for later processing
     function claimFees() external {
-        require(feeclaimer == address(0) || feeclaimer == msg.sender, "!auth");
         require(feeQueue != address(0),"!fee queue");
 
         //check if queued rewards, then claim
@@ -181,8 +191,9 @@ contract Booster{
     /* ========== EVENTS ========== */
     event SetPendingOwner(address indexed _address);
     event OwnerChanged(address indexed _address);
+    event SnapshotDelegateSet(address indexed _address);
     event FeeQueueChanged(address indexed _address, bool _useProcess, address _operator);
-    event FeeClaimerChanged(address indexed _address);
+    event TokenSweeperChanged(address indexed _address);
     event FeeClaimPairSet(address indexed _address, address indexed _token, bool _value);
     event RewardManagerChanged(address indexed _address);
     event VoteManagerChanged(address indexed _address);

@@ -190,13 +190,13 @@ contract("prisma airdrop claim and mint", async accounts => {
     let airdropbase = await AirdropDistributor.at(contractList.prisma.airdrop_base_vecrv);
     let airdrop = await AirdropDistributor.at(contractList.prisma.airdrop_vecrv);
 
-    let airbaseowner = "0xD0eFDF01DD8d650bBA8992E2c42D0bC6d441a673";
-    let airowner = "0xd8531a94100f15af7521a7B6E724aC4959E0A025";
-    await unlockAccount(airbaseowner);
-    await unlockAccount(airowner);
-    await airdropbase.setMerkleRoot("0xa353d0271199c6c617d696e89e96654f2c9081881e5f8efc497aba0ac95e7cea",{from:airbaseowner,gasPrice:0});
-    await airdrop.setMerkleRoot("0xadd4b434427e8e5c69350b0b9dcc1766106372ccf72a1b691d54376da5edf15b",{from:airowner,gasPrice:0});
-    console.log("merkle set");
+    // let airbaseowner = "0xD0eFDF01DD8d650bBA8992E2c42D0bC6d441a673";
+    // let airowner = "0xd8531a94100f15af7521a7B6E724aC4959E0A025";
+    // await unlockAccount(airbaseowner);
+    // await unlockAccount(airowner);
+    // await airdropbase.setMerkleRoot("0xa353d0271199c6c617d696e89e96654f2c9081881e5f8efc497aba0ac95e7cea",{from:airbaseowner,gasPrice:0});
+    // await airdrop.setMerkleRoot("0xadd4b434427e8e5c69350b0b9dcc1766106372ccf72a1b691d54376da5edf15b",{from:airowner,gasPrice:0});
+    // console.log("merkle set");
 
     //return;
 
