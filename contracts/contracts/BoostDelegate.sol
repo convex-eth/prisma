@@ -50,11 +50,14 @@ contract BoostDelegate is IBoostDelegate{
 
     function getFeePct(
         address, // claimant,
-        address,// receiver,
+        address receiver,
         uint,// amount,
         uint,// previousAmount,
         uint// totalWeeklyEmissions
     ) external view returns (uint256 feePct){
+        if(receiver == convexproxy){
+            return 0;
+        }
         return boostFee;
     }
 
