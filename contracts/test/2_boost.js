@@ -189,37 +189,17 @@ contract("prisma deploy and lock testing", async accounts => {
 
     let oldboostDelegate = await BoostDelegate.at(contractList.system.boostDelegate);
     console.log("old boost delegate: " +oldboostDelegate.address);
-    let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 0);
+    let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 1000);
     console.log("boostDelegate: " +boostDelegate.address);
 
-    await booster.shutdownSystem({from:deployer});
-    var newbooster = await Booster.new(voteproxy.address, depositor.address, prismaLocker.address, vault.address, adminVoting.address, incentiveVoting.address, prisma.address, cvxPrisma.address, {from:deployer});
-    console.log("new booster: " +newbooster.address);
-    await voteproxy.setOperator(newbooster.address,{from:deployer});
-    await newbooster.setFeeQueue(receiverVault.address, false, feeClaimer.address, {from:deployer});
-    await newbooster.setVoteManager(multisig, {from:deployer});
-    await newbooster.setTokenSweeper(boostDelegate.address, {from:deployer});
-    console.log("new booster set");
-
-    await newbooster.setBoosterFees(true,0,boostDelegate.address,{from:deployer});
-    await newbooster.setTokenMinter(oldboostDelegate.address, false, {from:deployer});
-
-    var crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
-    var crvbalance = await crv.balanceOf(contractList.system.voteProxy);
-    var cvxbalance = await cvx.balanceOf(contractList.system.voteProxy);
-
-    await crv.balanceOf(contractList.system.voteProxy).then(a=>console.log("crv on proxy: " +a))
-    await cvx.balanceOf(contractList.system.voteProxy).then(a=>console.log("cvx on proxy: " +a))
-    await newbooster.recoverERC20FromProxy(crv.address, crvbalance, contractList.system.treasury,{from:deployer});
-    await newbooster.recoverERC20FromProxy(cvx.address, cvxbalance, contractList.system.treasury,{from:deployer});
-    console.log("sweep");
-    await crv.balanceOf(contractList.system.voteProxy).then(a=>console.log("crv on proxy: " +a))
-    await cvx.balanceOf(contractList.system.voteProxy).then(a=>console.log("cvx on proxy: " +a))
-
-    await newbooster.setTokenMinter(boostDelegate.address, true, {from:deployer});
+    
+    await booster.setBoosterFees(true,65535,boostDelegate.address,{from:deployer});
+    await booster.setTokenMinter(oldboostDelegate.address, false, {from:deployer});
+    await booster.setTokenMinter(boostDelegate.address, true, {from:deployer});
+    await booster.setTokenSweeper(boostDelegate.address, {from:deployer});
     console.log("set booster fee/delegate");
 
-    // return;
+    return;
 
     await vault.claimableRewardAfterBoost(userZ, userZ, addressZero, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("self claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount +"\nfees: " +a.feeToDelegate));
     await vault.claimableRewardAfterBoost(userZ, voteproxy.address, voteproxy.address, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("convex claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount+"\nfees: " +a.feeToDelegate));
