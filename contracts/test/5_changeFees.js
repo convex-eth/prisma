@@ -190,7 +190,9 @@ contract("prisma deploy and lock testing", async accounts => {
     let currentboostDelegate = await BoostDelegate.at(contractList.system.boostDelegate);
     console.log("boost delegate: " +currentboostDelegate.address);
     
-    await booster.setBoosterFees(true,1000,currentboostDelegate.address,{from:deployer});
+    // await booster.setBoosterFees(true,100,currentboostDelegate.address,{from:deployer});
+    await booster.setBoosterFees(true,65535,currentboostDelegate.address,{from:deployer});
+    await currentboostDelegate.setFee(500,{from:deployer});
 
     console.log("fees updated");
 
