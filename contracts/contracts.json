@@ -21,7 +21,8 @@
         "vestingClaim": "0x7e2Ca1134dC44B5D368575Da316d87ac9B9065E7",
         "dropMinterVecrv": "0x8864187b257e0fB3BD74054b72D9c1834e76d712",
         "dropMinterPoints": "0x9c4d60fA85088d40e3D8030dba283E9708EC9292",
-        "treasuryManager": "0xBb48c21E9101A85EE6D00B4F1A7B946dF1B09EA7"
+        "treasuryManager": "0xBb48c21E9101A85EE6D00B4F1A7B946dF1B09EA7",
+        "treasuryManagerPrisma": "0xD60cd4AD7A2D6bF4eC9fccbCAeec769b52726dfd"
     },
     "prisma": {
         "prisma": "0xdA47862a83dac0c112BA89c6abC2159b95afd71C",
