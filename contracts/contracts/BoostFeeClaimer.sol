@@ -2,6 +2,8 @@
 pragma solidity 0.8.19;
 
 import "./interfaces/IFeeReceiver.sol";
+import "./interfaces/IBooster.sol";
+import "./interfaces/IVoterProxy.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface IProxyVault{
@@ -11,13 +13,15 @@ interface IProxyVault{
 }
 
 //claim fees from the proxyvault which is holding expired and/or locked tokens
-contract FeeClaimer is IFeeReceiver {
+contract BoostFeeClaimer is IFeeReceiver {
 
     address public immutable prisma;
     address public immutable vault;
     address public immutable operator;
+    address public immutable veProxy;
 
-    constructor(address _vault, address _prisma, address _operator) {
+    constructor(address _proxy, address _vault, address _prisma, address _operator) {
+        veProxy = _proxy;
         vault = _vault;
         prisma = _prisma;
         operator = _operator;
@@ -29,6 +33,9 @@ contract FeeClaimer is IFeeReceiver {
     }
 
     function processFees() external onlyOperator{
+        //claim latest
+        IBooster(IVoterProxy(veProxy).operator()).claimFees();
+
         //withdraw locked
         IProxyVault(vault).withdrawLocked(type(uint256).max);
 

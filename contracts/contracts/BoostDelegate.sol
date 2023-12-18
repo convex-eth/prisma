@@ -21,9 +21,10 @@ contract BoostDelegate is IBoostDelegate{
 
     uint256 public boostFee;
     address[] public sweepableTokens;
+    mapping(address => bool) public feeExemption;
 
-    event SetMintableClaimer(address indexed _address, bool _valid);
     event SetBoostFee(uint256 _fee);
+    event SetExemption(address indexed _address, bool _valid);
     event SetSweepableTokens(address[] _tokens);
 
     constructor(address _proxy, address _cvxprisma, uint256 _fee){
@@ -43,19 +44,27 @@ contract BoostDelegate is IBoostDelegate{
         emit SetBoostFee(_fee);
     }
 
+    function setExemption(address _account, bool _exempt) external onlyOwner{
+        feeExemption[_account] = _exempt;
+        emit SetExemption(_account, _exempt);
+    }
+
     function setSweepableTokens(address[] calldata _tokens) external onlyOwner{
         sweepableTokens = _tokens;
         emit SetSweepableTokens(_tokens);
     }
 
     function getFeePct(
-        address, // claimant,
+        address claimant,
         address receiver,
         uint,// amount,
         uint,// previousAmount,
         uint// totalWeeklyEmissions
     ) external view returns (uint256 feePct){
         if(receiver == convexproxy){
+            return 0;
+        }
+        if(feeExemption[claimant]){
             return 0;
         }
         return boostFee;

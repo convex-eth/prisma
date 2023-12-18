@@ -6,4 +6,5 @@ interface IBooster {
    function rewardManager() external returns(address);
    function isShutdown() external returns(bool);
    function recoverERC20FromProxy(address _tokenAddress, uint256 _tokenAmount, address _withdrawTo) external;
+   function claimFees() external;
 }
