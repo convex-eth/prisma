@@ -36,7 +36,6 @@ contract Booster{
     address public sweeper;
     bool public isShutdown;
     address public feeQueue;
-    bool public feeQueueProcess;
 
 
     constructor(address _proxy, address _depositor, address _plocker, address _pvault, address _pVoting, address _pIncentives, address _prisma, address _cvxPrisma) {
@@ -108,6 +107,11 @@ contract Booster{
         emit SnapshotDelegateSet(_delegate);
     }
 
+    function setDelegateApproval(address _target, address _delegate, bool _active) external onlyOwner{
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setDelegateApproval(address,bool)")), _delegate, _active);
+        _proxyCall(_target,data);
+    }
+
     //make execute() calls to the proxy voter
     function _proxyCall(address _to, bytes memory _data) internal{
         (bool success,) = IStaker(proxy).execute(_to,uint256(0),_data);
@@ -115,12 +119,11 @@ contract Booster{
     }
 
     //set fee queue, a contract fees are moved to when claiming
-    function setFeeQueue(address _queue, bool _process, address _operator) external onlyOwner{
+    function setFeeQueue(address _queue, address _operator) external onlyOwner{
         feeQueue = _queue;
-        feeQueueProcess = _process;
         bytes memory data = abi.encodeWithSelector(bytes4(keccak256("setOperator(address)")), _operator);
         _proxyCall(feeQueue,data);
-        emit FeeQueueChanged(_queue, _process, _operator);
+        emit FeeQueueChanged(_queue, _operator);
     }
 
     //give an address access to sweep tokens
@@ -179,11 +182,6 @@ contract Booster{
             //claim
             bytes memory data = abi.encodeWithSelector(bytes4(keccak256("claimBoostDelegationFees(address)")), feeQueue);
             _proxyCall(prismaVault,data);
-
-            //process hook if needed
-            if(feeQueueProcess){
-                IFeeReceiver(feeQueue).processFees();
-            }
         }
     }
 
@@ -192,7 +190,7 @@ contract Booster{
     event SetPendingOwner(address indexed _address);
     event OwnerChanged(address indexed _address);
     event SnapshotDelegateSet(address indexed _address);
-    event FeeQueueChanged(address indexed _address, bool _useProcess, address _operator);
+    event FeeQueueChanged(address indexed _address, address _operator);
     event TokenSweeperChanged(address indexed _address);
     event FeeClaimPairSet(address indexed _address, address indexed _token, bool _value);
     event RewardManagerChanged(address indexed _address);

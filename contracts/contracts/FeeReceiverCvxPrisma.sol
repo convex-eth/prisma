@@ -11,28 +11,28 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 contract FeeReceiverCvxPrisma is IFeeReceiver {
     using SafeERC20 for IERC20;
 
-    address public immutable prisma;
+    address public immutable rewardToken;
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     address public constant cvxDistro = address(0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6);
     address public immutable rewardAddress;
 
     event RewardsDistributed(address indexed token, uint256 amount);
 
-    constructor(address _prisma, address _rewardAddress) {
-        prisma = _prisma;
+    constructor(address _rewardToken, address _rewardAddress) {
+        rewardToken = _rewardToken;
         rewardAddress = _rewardAddress;
-        IERC20(prisma).approve(rewardAddress, type(uint256).max);
+        IERC20(rewardToken).approve(rewardAddress, type(uint256).max);
         IERC20(cvx).approve(rewardAddress, type(uint256).max);
     }
 
     function processFees() external {
-        uint256 tokenbalance = IERC20(prisma).balanceOf(address(this));
+        uint256 tokenbalance = IERC20(rewardToken).balanceOf(address(this));
        
-        //process prisma
+        //process rewardToken
         if(tokenbalance > 0){
             //send to rewards
-            IRewards(rewardAddress).notifyRewardAmount(prisma, tokenbalance);
-            emit RewardsDistributed(prisma, tokenbalance);
+            IRewards(rewardAddress).notifyRewardAmount(rewardToken, tokenbalance);
+            emit RewardsDistributed(rewardToken, tokenbalance);
         }
 
         IRewards(cvxDistro).getReward(address(this));
