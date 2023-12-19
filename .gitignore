@@ -6,3 +6,4 @@ contracts/package-lock.json
 contracts/.secret
 contracts/.etherscanApi
 contracts/.api_keys
+package-lock.json
