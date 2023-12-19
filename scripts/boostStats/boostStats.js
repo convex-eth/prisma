@@ -69,7 +69,7 @@ const getBoostStats = async (address) => {
     console.log("Max Boostable: " +Number(max_total.toFixed(2)).toLocaleString());
     console.log("Total Claimed: " +Number(used.toFixed(2)).toLocaleString() +" ("+percent.toFixed(2) +"%)");
     console.log("Current Boost: " +Number(current_boost.toFixed(2)).toLocaleString() +"x");
-    console.log("Fees for account: " +Number(fees.toFixed(2)).toLocaleString());
+    console.log("Claimable Fees: " +Number(fees.toFixed(2)).toLocaleString());
     console.log("\n")
 }
 
