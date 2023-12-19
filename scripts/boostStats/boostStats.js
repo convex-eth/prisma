@@ -35,9 +35,11 @@ const convex = "0x8ad7a9e2B3Cd9214f36Cb871336d8ab34DdFdD5b";
 const yearn = "0x90be6DFEa8C80c184C442a36e17cB2439AAE25a7";
 
 
-const getBoostStats = async (address) => {
+const getBoostStats = async (address, week) => {
 
-    var week = await prismaVault.getWeek();
+    if(week == 0){
+        week = await prismaVault.getWeek();
+    }
     var total_weekly = await prismaVault.weeklyEmissions(week);
 
     var initial = await boostCalculator.getClaimableWithBoost(address, 0, total_weekly)
@@ -78,13 +80,14 @@ const main = async () => {
 
     const cmdArgs = process.argv.slice(2);
     var address = cmdArgs[0];
+    var week = Number.isInteger(Number(cmdArgs[1])) ? Number(cmdArgs[1]) : 0;
     if(address.toLowerCase() == "convex"){
         address = convex;
     }
     if(address.toLowerCase() == "yearn"){
         address = yearn;
     }
-    await getBoostStats(address);
+    await getBoostStats(address, week);
 }
 
 main();
