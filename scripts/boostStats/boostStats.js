@@ -95,6 +95,10 @@ const main = async () => {
     timestamp = timestamp * week
     var prismaweek = Number(await prismaVault.getWeek());
     var useBlock = await provider.getBlockNumber();
+    if(useweek === 0 || useweek > prismaweek){
+        useweek = prismaweek
+    }
+    // console.log("use week " +useweek);
     if(useweek < prismaweek){
         var adjustweeks = (prismaweek - useweek) - 1;
         timestamp = timestamp - (adjustweeks * week) - 100000;
@@ -102,7 +106,7 @@ const main = async () => {
         var block = await getBlockByTime(provider,timestamp/1000);
         useBlock = block.number;
     }
-    // console.log("using block: "+useBlock);
+    console.log("using block: "+useBlock);
     await getBoostStats(address, useBlock);
 }
 
