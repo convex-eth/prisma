@@ -25,6 +25,7 @@ const DropMinter = artifacts.require("DropMinter");
 const ProxyVault = artifacts.require("ProxyVault");
 const FeeClaimer = artifacts.require("FeeClaimer");
 const BoostDelegate = artifacts.require("BoostDelegate");
+const BoostDelegateV2 = artifacts.require("BoostDelegateV2");
 
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -172,7 +173,7 @@ contract("prisma deploy and lock testing", async accounts => {
 
     let staking = await cvxPrismaStaking.at(contractList.system.cvxPrismaStaking)
 
-    let stakingFeeReceiver = await FeeReceiverCvxPrisma.at(contractList.system.stakingFeeReceiver)
+    // let stakingFeeReceiver = await FeeReceiverCvxPrisma.at(contractList.system.stakingFeeReceiver)
 
     let feeDeposit = await FeeDepositV2.at(contractList.system.feeDeposit)
 

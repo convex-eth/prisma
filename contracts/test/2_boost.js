@@ -23,8 +23,9 @@ const Utilities = artifacts.require("Utilities");
 const Burner = artifacts.require("Burner");
 const DropMinter = artifacts.require("DropMinter");
 const ProxyVault = artifacts.require("ProxyVault");
-const FeeClaimer = artifacts.require("FeeClaimer");
+// const FeeClaimer = artifacts.require("FeeClaimer");
 const BoostDelegate = artifacts.require("BoostDelegate");
+const BoostDelegateV2 = artifacts.require("BoostDelegateV2");
 
 const Booster = artifacts.require("Booster");
 const ICvxDistribution = artifacts.require("ICvxDistribution");
@@ -33,13 +34,17 @@ const ICvxDistribution = artifacts.require("ICvxDistribution");
 const IERC20 = artifacts.require("IERC20");
 
 
-const addAccount = async (address) => {
+const unlockAccount = async (address) => {
+  let NETWORK = config.network;
+  if(!NETWORK.includes("debug")){
+    return null;
+  }
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
         jsonrpc: "2.0",
-        method: "evm_addAccount",
-        params: [address, "passphrase"],
+        method: "hardhat_impersonateAccount",
+        params: [address],
         id: new Date().getTime(),
       },
       (err, result) => {
@@ -52,18 +57,17 @@ const addAccount = async (address) => {
   });
 };
 
-const unlockAccount = async (address) => {
+const setNoGas = async () => {
   let NETWORK = config.network;
   if(!NETWORK.includes("debug")){
     return null;
   }
-  await addAccount(address);
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
         jsonrpc: "2.0",
-        method: "personal_unlockAccount",
-        params: [address, "passphrase"],
+        method: "hardhat_setNextBlockBaseFeePerGas",
+        params: ["0x0"],
         id: new Date().getTime(),
       },
       (err, result) => {
@@ -131,6 +135,7 @@ contract("prisma deploy and lock testing", async accounts => {
     let addressZero = "0x0000000000000000000000000000000000000000"
 
     let cvx = await IERC20.at(contractList.system.cvx);
+    let crv = await IERC20.at(contractList.system.crv);
     
 
     let userA = accounts[0];
@@ -172,13 +177,13 @@ contract("prisma deploy and lock testing", async accounts => {
 
     let staking = await cvxPrismaStaking.at(contractList.system.cvxPrismaStaking)
 
-    let stakingFeeReceiver = await FeeReceiverCvxPrisma.at(contractList.system.stakingFeeReceiver)
+    // let stakingFeeReceiver = await FeeReceiverCvxPrisma.at(contractList.system.stakingFeeReceiver)
 
-    let feeDeposit = await FeeDepositV2.at(contractList.system.feeDeposit)
+    // let feeDeposit = await FeeDepositV2.at(contractList.system.feeDeposit)
 
     let receiverVault = await ProxyVault.at(contractList.system.receiverVault);
 
-    let feeClaimer = await FeeClaimer.at(contractList.system.feeClaimer)
+    // let feeClaimer = await FeeClaimer.at(contractList.system.feeClaimer)
 
     // let dropMinter = await DropMinter.at(contractList.system.);
 
@@ -187,19 +192,19 @@ contract("prisma deploy and lock testing", async accounts => {
 
     
 
-    let oldboostDelegate = await BoostDelegate.at(contractList.system.boostDelegate);
-    console.log("old boost delegate: " +oldboostDelegate.address);
-    let boostDelegate = await BoostDelegate.new(voteproxy.address, cvxPrisma.address, 1000);
+    let boostDelegate = await BoostDelegateV2.at(contractList.system.boostDelegate);
+    // console.log("old boost delegate: " +oldboostDelegate.address);
+    // let boostDelegate = await BoostDelegateV2.new(voteproxy.address, cvxPrisma.address, 1500);
     console.log("boostDelegate: " +boostDelegate.address);
 
-    
-    await booster.setBoosterFees(true,65535,boostDelegate.address,{from:deployer});
-    await booster.setTokenMinter(oldboostDelegate.address, false, {from:deployer});
-    await booster.setTokenMinter(boostDelegate.address, true, {from:deployer});
-    await booster.setTokenSweeper(boostDelegate.address, {from:deployer});
+    await booster.setBoosterFees(true,65535,contractList.system.boostFactoryForwarder,{from:multisig,gasPrice:0});
+    await boostDelegate.setExemption("0xD60cd4AD7A2D6bF4eC9fccbCAeec769b52726dfd",true,{from:multisig,gasPrice:0});
+    // await booster.setTokenMinter(oldboostDelegate.address, false, {from:multisig,gasPrice:0});
+    await booster.setTokenMinter(boostDelegate.address, true, {from:multisig,gasPrice:0});
+    await booster.setTokenSweeper(boostDelegate.address, {from:multisig,gasPrice:0});
     console.log("set booster fee/delegate");
 
-    return;
+    // return;
 
     await vault.claimableRewardAfterBoost(userZ, userZ, addressZero, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("self claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount +"\nfees: " +a.feeToDelegate));
     await vault.claimableRewardAfterBoost(userZ, voteproxy.address, voteproxy.address, "0xf69282a7e7ba5428f92f610e7afa1c0cedc4e483").then(a=>console.log("convex claimable: " +JSON.stringify(a) +"\namount: " +a.adjustedAmount+"\nfees: " +a.feeToDelegate));
