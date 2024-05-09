@@ -65,11 +65,11 @@ contract BoostDelegateV2 is IBoostDelegateV2{
         uint256, //_previousAmount
         uint256 //_totalWeeklyEmissions
     ) external view returns (uint256) {
-        if(_receiver == convexproxy){
-            return mintFee;
-        }
         if(feeExemption[_claimant]){
             return 0;
+        }
+        if(_receiver == convexproxy){
+            return mintFee;
         }
         return boostFee;
     }
