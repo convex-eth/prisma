@@ -47,7 +47,7 @@ contract TreasuryManagerPrisma{
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
         operators[msg.sender] = true;
 
-        slippage = 970 * 1e15;
+        slippage = 997 * 1e15;
         IERC20(cvxPrisma).safeApprove(exchange, type(uint256).max);
         IERC20(prisma).safeApprove(exchange, type(uint256).max);
         IERC20(prisma).safeApprove(deposit, type(uint256).max);
